@@ -8,9 +8,13 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
   try {
     // Điều hướng đến trang web mục tiêu
     await driver.get("https://phimmoiyyy.net/");
-
+    let linkElement = await driver.findElement(By.linkText("2023"));
+    // Nhấp vào liên kết để chuyển hướng sang trang con
+    await linkElement.click();
+    // Đợi cho trang con được tải hoàn thành
+    await driver.wait(until.urlContains("/nam-phat-hanh/2023"), 5000);
     // Tìm tất cả các phần tử div với class "owl-item"
-    let divElements = await driver.findElements(By.css(".owl-item"));
+    let divElements = await driver.findElements(By.css("article.item"));
 
     // Tạo một mảng để lưu trữ dữ liệu cho mỗi div dưới dạng một object
     const data = [];
