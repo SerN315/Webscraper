@@ -45,7 +45,8 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
       // Thực thi mã JavaScript để lấy nội dung văn bản của phần tử span bị tràn
       let spanContent = await driver.executeScript(
-        "return arguments[0].innerText;", spanElement
+        "return arguments[0].innerText;",
+        spanElement
       );
 
       // Lưu trữ dữ liệu trong một object
@@ -54,7 +55,7 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
         title,
         link,
         spanContent,
-        trangthai: await divElement.findElement(By.css(".trangthai")).getText()
+        trangthai: await divElement.findElement(By.css(".trangthai")).getText(),
       };
 
       // Đẩy object vào mảng data
@@ -69,8 +70,8 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
         { id: "title", title: "Tiêu đề" },
         { id: "link", title: "Liên kết" },
         { id: "spanContent", title: "Nội dung span" },
-        { id: "trangthai", title: "Trạng thái" }
-      ]
+        { id: "trangthai", title: "Trạng thái" },
+      ],
     });
 
     // Ghi dữ liệu vào tệp CSV
