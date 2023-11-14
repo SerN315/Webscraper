@@ -3,86 +3,130 @@ const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
 // Xác định hàm scraping
 (async function scrape() {
-  // Tạo một instance của WebDriver (trong trường hợp này, sử dụng Microsoft Edge)
+  // Khởi tạo trình duyệt và driver
   let driver = await new Builder().forBrowser(Browser.EDGE).build();
   try {
-    // Điều hướng đến trang web mục tiêu
+    // Truy cập vào trang web
     await driver.get("https://phimmoiyyy.net/");
-    let linkElement = await driver.findElement(By.linkText("2023"));
-    // Nhấp vào liên kết để chuyển hướng sang trang con
-    await linkElement.click();
-    // Đợi cho trang con được tải hoàn thành
-    await driver.wait(until.urlContains("/nam-phat-hanh/2023"), 5000);
-    // Tìm tất cả các phần tử div với class "owl-item"
-    let divElements = await driver.findElements(By.css("article.item"));
 
-    // Tạo một mảng để lưu trữ dữ liệu cho mỗi div dưới dạng một object
+    // Tìm phần tử link "2023" và click vào nó
+    let linkElement = await driver.findElement(By.linkText("2023"));
+    await linkElement.click();
+
+    // Chờ cho đến khi URL chứa "/nam-phat-hanh/2023"
+    await driver.wait(until.urlContains("/nam-phat-hanh/2023"), 5000);
+
+    // Lấy danh sách các phần tử article trên trang
+    let articleElements = await driver.findElements(By.css("article.item"));
+
     const data = [];
 
-    // Lặp qua các phần tử div
-    for (let i = 0; i < divElements.length; i++) {
-      let divElement = divElements[i];
+    // Lặp qua 3 phần tử article đầu tiên
+    for (let i = 0; i < articleElements.length; i++) {
+      let articleElement = articleElements[i];
 
-      // Tìm các phần tử con bên trong phần tử div
-      let imgElement = await divElement.findElement(By.css("img"));
-
-      let titleLinkElement;
-      try {
-        titleLinkElement = await divElement.findElement(By.css("h3 a"));
-      } catch (error) {
-        console.log("Không thể tìm thấy phần tử tiêu đề:", error.message);
-        continue; // Bỏ qua lần lặp này nếu không tìm thấy phần tử tiêu đề
-      }
-
-      let spanElement;
-      try {
-        spanElement = await divElement.findElement(By.css("span")); // CSS selector ví dụ
-      } catch (error) {
-        console.log("Không thể tìm thấy phần tử span:", error.message);
-        continue; // Bỏ qua lần lặp này nếu không tìm thấy phần tử span
-      }
-
-      // Lấy nội dung văn bản và thuộc tính của các phần tử con
-      let imgUrl = await imgElement.getAttribute("src");
-      let title = await titleLinkElement.getText();
+      // Lấy phần tử link tiêu đề và lấy thuộc tính href
+      let titleLinkElement = await articleElement.findElement(By.css("h3 a"));
       let link = await titleLinkElement.getAttribute("href");
 
-      // Thực thi mã JavaScript để lấy nội dung văn bản của phần tử span bị tràn
-      let spanContent = await driver.executeScript(
-        "return arguments[0].innerText;",
-        spanElement
-      );
+      // Truy cập vào trang con
+      await driver.get(link);
 
-      // Lưu trữ dữ liệu trong một object
+      // Lấy các thông tin cần thiết từ trang con
+      let imgElement = await driver.findElement(By.css(".poster img"));
+      let titleElement = await driver.findElement(By.css("h1"));
+      let spanContentElement = await driver.findElement(
+        By.css(".extra .valor")
+      );
+      let dateElement = await driver.findElement(By.css(".date"));
+      // ...
+
+      // Xử lý trường hợp không tìm thấy phần tử tapElement
+      let tapElement;
+      try {
+        tapElement = await driver.findElement(
+          By.css(".movie_label .item-label")
+        );
+      } catch (error) {
+        console.log("Tap element not found");
+        tapElement = null;
+      }
+
+      // Lấy các thông tin khác từ trang con
+      let ratingValueElement = await driver.findElement(
+        By.css(".starstruck-rating span.dt_rating_vgs")
+      );
+      let ratingCountElement = await driver.findElement(
+        By.css(".starstruck-rating span.rating-count")
+      );
+      let genresElements = await driver.findElements(By.css(".sgeneros a"));
+
+      // Lấy giá trị của thuộc tính src từ phần tử img
+      let imgUrl = await imgElement.getAttribute("src");
+
+      // Lấy nội dung của các phần tử khác
+      let title = await titleElement.getText();
+      let spanContent = await spanContentElement.getText();
+      let dateCreated = await dateElement.getText();
+      let tap = "";
+      if (tapElement) {
+        tap = await tapElement.getText();
+      }
+      let ratingValue = await ratingValueElement.getText();
+      let ratingCount = await ratingCountElement.getText();
+
+      // Lấy các thể loại từ các phần tử a trong phần tử có class "sgeneros"
+      let genres = [];
+      for (let j = 0; j < genresElements.length; j++) {
+        let genreElement = genresElements[j];
+        let genre = await genreElement.getText();
+        genres.push(genre);
+      }
+
+      // Tạo đối tượng dữ liệu cho hàng dữ liệu hiện tại
       let rowData = {
         imgUrl,
         title,
         link,
         spanContent,
-        trangthai: await divElement.findElement(By.css(".trangthai")).getText(),
+        dateCreated,
+        tap,
+        ratingValue,
+        ratingCount,
+        genres,
       };
 
-      // Đẩy object vào mảng data
+      // Thêm hàng dữ liệu vào mảng data
       data.push(rowData);
+
+      // Quay lại trang danh sách
+      await driver.get("https://phimmoiyyy.net/");
+      linkElement = await driver.findElement(By.linkText("2023"));
+      await linkElement.click();
+      await driver.wait(until.urlContains("/nam-phat-hanh/2023"), 5000);
+      articleElements = await driver.findElements(By.css("article.item"));
     }
 
-    // Tạo một instance của CSV writer với các tiêu đề dựa trên các khóa của object đầu tiên trong mảng data
+    // Tạo đối tượng csvWriter để ghi dữ liệu vào file CSV
     const csvWriter = createCsvWriter({
       path: "output.csv",
       header: [
         { id: "imgUrl", title: "URL Hình ảnh" },
         { id: "title", title: "Tiêu đề" },
-        { id: "link", title: "Liên kết" },
-        { id: "spanContent", title: "Nội dung span" },
-        { id: "trangthai", title: "Trạng thái" },
+        { id: "link", title: "Link" },
+        { id: "spanContent", title: "Nội dung" },
+        { id: "dateCreated", title: "Ngày phát hành" },
+        { id: "tap", title: "Tập" },
+        { id: "ratingValue", title: "Đánh giá" },
+        { id: "ratingCount", title: "Số lượt đánh giá" },
+        { id: "genres", title: "Thể loại" },
       ],
     });
 
-    // Ghi dữ liệu vào tệp CSV
+    // Ghi dữ liệu vào file CSV
     await csvWriter.writeRecords(data);
-    console.log("Dữ liệu đã được lưu vào output.csv");
   } finally {
-    // Kết thúc instance của WebDriver và đóng trình duyệt
+    // Đóng trình duyệt và driver
     await driver.quit();
   }
 })();
