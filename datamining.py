@@ -5,6 +5,7 @@ from selenium.webdriver.edge.options import Options
 from selenium import webdriver
 from csv import DictWriter
 import time
+import os
 
 def scrape():
     options = Options()
