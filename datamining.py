@@ -49,7 +49,6 @@ def scrape():
                 # Lấy các thông tin cần thiết từ trang con
                 info_element = driver.find_element(By.CSS_SELECTOR, "#info p")
                 title_element = driver.find_element(By.CSS_SELECTOR, "h1")
-                span_content_element = driver.find_element(By.CSS_SELECTOR, ".extra .valor")
                 date_element = driver.find_element(By.CSS_SELECTOR, ".date")
                 rating_value_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.dt_rating_vgs")
                 rating_count_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.rating-count")
@@ -61,7 +60,6 @@ def scrape():
                 # Lấy nội dung của các phần tử khác
                 info = info_element.text
                 title = title_element.text
-                span_content = span_content_element.text
                 date_created = date_element.text
                 rating_value = rating_value_element.text
                 rating_count = rating_count_element.text
@@ -73,7 +71,6 @@ def scrape():
                 row_data = {
                     "info": info,
                     "title": title,
-                    "spanContent": span_content,
                     "dateCreated": date_created,
                     "ratingValue": rating_value,
                     "ratingCount": rating_count,
@@ -87,19 +84,19 @@ def scrape():
                 driver.get(current_page_url)
                 article_elements = driver.find_elements(By.CSS_SELECTOR, "article.item")
 
-            # Ghi dữ liệu vào file CSV
+            # Check if the file already exists to determine whether to write headers or not
             write_headers = not os.path.exists("output.csv")
 
-# Ghi dữ liệu vào file CSV
+            # Ghi dữ liệu vào file CSV
             with open("output.csv", "a", newline="", encoding="utf-8") as csv_file:
-             fieldnames = [
-        "title", "info", "link", "spanContent",
-        "dateCreated", "ratingValue", "ratingCount", "genres"
-    ]
-             writer = DictWriter(csv_file, fieldnames=fieldnames)
+              fieldnames = [
+                "title", "info","dateCreated", "ratingValue", "ratingCount", "genres"
+            ]
+              writer = DictWriter(csv_file, fieldnames=fieldnames)
+              write_headers = True
 
-             if write_headers:
-              writer.writeheader()  # Write headers only if the file is new
+              if write_headers:
+                writer.writeheader()  # Write headers only if the file is new
 
               writer.writerows(data)
          # Check if there's a next page
@@ -131,49 +128,39 @@ scrape()
 
 
 
-import csv
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.tree import export_graphviz
-import graphviz
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
 
-# Load the scraped data from the CSV file
-data = []
-with open("output.csv", "r", encoding="utf-8") as csv_file:
-    reader = csv.DictReader(csv_file)
-    for row in reader:
-        data.append(row)
+# Load the dataset
+data = pd.read_csv('output.csv')
 
-# Prepare the feature matrix X and the target variable y
-X = []
-y = []
-for row in data:
-    rating_value = float(row["ratingValue"])
-    genres = row["genres"]
-    X.append([rating_value])
-    y.append(genres)
+# Combine relevant features for content-based filtering
+data['combined_features'] = data['genres'] + ' ' + data['ratingValue'] + ' ' + data['ratingCount'] + ' ' + data['info']
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# TF-IDF Vectorization for textual analysis
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf_vectorizer.fit_transform(data['combined_features'])
 
-# Create an instance of the decision tree classifier and fit it to the training data
-clf = DecisionTreeClassifier()
-clf.fit(X_train, y_train)
+# Normalize numerical features
+scaler = MinMaxScaler()
+numerical_features = data[['ratingValue', 'ratingCount']].astype(float)
+data[['ratingValue', 'ratingCount']] = scaler.fit_transform(numerical_features)
 
-# Use the trained classifier to make predictions on the testing data
-y_pred = clf.predict(X_test)
+# Compute cosine similarity matrix
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# Evaluate the accuracy of the classifier
-accuracy = accuracy_score(y_test, y_pred)
-print("Accuracy:", accuracy)
+# Function to get movie recommendations based on similarity
+def get_movie_recommendations(movie_title, top_n=5):
+    idx = data[data['title'] == movie_title].index[0]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:top_n+1]
+    movie_indices = [i[0] for i in sim_scores]
+    return data['title'].iloc[movie_indices]
 
-# Visualize the decision tree
-dot_data = export_graphviz(clf, out_file=None, feature_names=["ratingValue"], class_names=clf.classes_, filled=True, rounded=True, special_characters=True)
-graph = graphviz.Source(dot_data)
-graph.render(filename="decision_tree", format="png", engine="dot", directory="C:\coding\Html\Webscraper\decision_tree")
-
-# Predict the genres based on a user's rating
-user_rating = 4.5  # Example user rating
-predicted_genres = clf.predict([[user_rating]])
-print("Predicted genres:", predicted_genres)
+# Example: Get recommendations for a movie title
+movie_title = 'Your Movie Title'
+recommendations = get_movie_recommendations(movie_title)
+print(f"Recommendations for '{movie_title}': {recommendations}")
