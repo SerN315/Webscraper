@@ -89,16 +89,16 @@ def scrape():
 
             # Ghi dữ liệu vào file CSV
             with open("output.csv", "a", newline="", encoding="utf-8") as csv_file:
-              fieldnames = [
+               fieldnames = [
                 "title", "info","dateCreated", "ratingValue", "ratingCount", "genres"
             ]
-              writer = DictWriter(csv_file, fieldnames=fieldnames)
-              write_headers = True
+               writer = DictWriter(csv_file, fieldnames=fieldnames)
+               write_headers = True
 
-              if write_headers:
+               if write_headers:
                 writer.writeheader()  # Write headers only if the file is new
 
-              writer.writerows(data)
+               writer.writerows(data)
          # Check if there's a next page
             next_page_links = driver.find_elements(By.CSS_SELECTOR, '.pagination a #nextpagination')
             next_page_link = next((link for link in next_page_links if 'inactive' not in link.get_attribute('class')), None)
@@ -133,34 +133,90 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
 
-# Load the dataset
+# Tải dữ liệu
 data = pd.read_csv('output.csv')
 
-# Combine relevant features for content-based filtering
-data['combined_features'] = data['genres'] + ' ' + data['ratingValue'] + ' ' + data['ratingCount'] + ' ' + data['info']
+# Hàm để làm sạch và chuyển đổi cột thành các giá trị số
+def clean_numeric_columns(df, columns):
+    for col in columns:
+        df[col] = pd.to_numeric(df[col].str.replace(',', ''), errors='coerce')
+    return df
 
-# TF-IDF Vectorization for textual analysis
+# Làm sạch và chuyển đổi các cột 'ratingValue' và 'ratingCount'
+data = clean_numeric_columns(data, ['ratingValue', 'ratingCount'])
+
+# Điền giá trị NaN trong các cột 'info' và 'genres' bằng chuỗi trống
+data['info'] = data['info'].fillna('')
+data['genres'] = data['genres'].fillna('')
+
+# Kết hợp các tính năng liên quan để lọc dữ liệu
+data['combined_features'] = data['title'] + ' ' + data['info'] + ' ' + data['ratingValue'].astype(str) + ' ' + data['ratingCount'].astype(str) + ' ' + data['genres']
+
+# Vector hóa TF-IDF cho phân tích văn bản
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
 tfidf_matrix = tfidf_vectorizer.fit_transform(data['combined_features'])
 
-# Normalize numerical features
+# Chuẩn hóa các tính năng số
 scaler = MinMaxScaler()
 numerical_features = data[['ratingValue', 'ratingCount']].astype(float)
 data[['ratingValue', 'ratingCount']] = scaler.fit_transform(numerical_features)
 
-# Compute cosine similarity matrix
+# Tính ma trận tương đồng cosine
 cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# Function to get movie recommendations based on similarity
+# Hàm để lấy các đề xuất phim dựa trên sự tương đồng
 def get_movie_recommendations(movie_title, top_n=5):
-    idx = data[data['title'] == movie_title].index[0]
+    filtered_data = data[data['title'] == movie_title]
+    if filtered_data.empty:
+        print(f"Không tìm thấy phim '{movie_title}' trong dữ liệu.")
+        return []
+
+    idx = filtered_data.index[0] if len(filtered_data) > 0 else None
+
+    if idx is None:
+        print(f"Không có phim tương tự cho '{movie_title}'.")
+        return []
+
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:top_n+1]
     movie_indices = [i[0] for i in sim_scores]
-    return data['title'].iloc[movie_indices]
+    return data['title'].iloc[movie_indices].tolist()
 
-# Example: Get recommendations for a movie title
-movie_title = 'Your Movie Title'
+# Ví dụ: Lấy các đề xuất cho một tựa phim
+movie_title = 'Bố Nuôi'
 recommendations = get_movie_recommendations(movie_title)
-print(f"Recommendations for '{movie_title}': {recommendations}")
+print(f"Các đề xuất cho '{movie_title}': {recommendations}")
+
+
+# Đoạn code trên thực hiện một hệ thống đề xuất phim dựa trên nội dung, sử dụng các phương pháp xử lý văn bản và tính toán độ tương đồng giữa các bộ phim.
+
+# 1. **Tải và Chuẩn bị Dữ liệu:**
+#    - Dữ liệu được tải từ tệp CSV ('output.csv') chứa thông tin về các bộ phim.
+#    - Các cột 'ratingValue' và 'ratingCount' được làm sạch để chuyển đổi về dạng số.
+
+# 2. **Kết hợp Các Đặc Trưng Liên Quan:**
+#    - Các thông tin có liên quan của mỗi bộ phim được kết hợp lại thành một cột mới ('combined_features'). Các thông tin này bao gồm tiêu đề phim, mô tả, đánh giá, số lượt đánh giá và thể loại của phim.
+
+# 3. **Vector hóa TF-IDF cho Văn Bản:**
+#    - Sử dụng `TfidfVectorizer` để chuyển đổi các văn bản thành ma trận dữ liệu TF-IDF.
+#    - TF-IDF đo lường tần suất xuất hiện của từng từ trong một văn bản so với toàn bộ tập dữ liệu và giúp đánh giá mức độ quan trọng của từng từ đối với mỗi mẫu dữ liệu.
+
+# 4. **Chuẩn hóa Các Đặc Trưng Số:**
+#    - Điều chỉnh các đặc trưng số như 'ratingValue' và 'ratingCount' thành khoảng giá trị chuẩn hóa.
+
+# 5. **Tính Ma Trận Tương Đồng:**
+#    - Sử dụng `cosine_similarity` để tính toán ma trận độ tương đồng cosine giữa các bộ phim dựa trên các đặc trưng kết hợp và ma trận TF-IDF.
+
+# 6. **Hàm Đề Xuất Phim:**
+#    - Hàm `get_movie_recommendations` nhận đầu vào là tựa đề phim và trả về danh sách các bộ phim được đề xuất dựa trên độ tương đồng cosine của nó với các bộ phim khác.
+
+#    Giải thích các thuật toán:
+#    - **TF-IDF (Term Frequency-Inverse Document Frequency):** Đánh giá tần suất xuất hiện của từ trong một văn bản so với toàn bộ tập dữ liệu. Tính toán giá trị quan trọng của từng từ trong một văn bản.
+#    - **Cosine Similarity:** Đo lường độ giống nhau giữa hai véc-tơ dựa trên góc giữa chúng trong không gian đa chiều. Trong trường hợp này, nó đo lường sự tương đồng giữa các bộ phim dựa trên các đặc trưng được kết hợp và văn bản của chúng.
+
+# Mục tiêu của đoạn code này là cung cấp gợi ý bộ phim dựa trên sự tương đồng về nội dung giữa các bộ phim trong tập dữ liệu.
+
+
+
+
