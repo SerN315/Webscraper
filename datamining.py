@@ -179,7 +179,7 @@ def get_movie_recommendations(movie_title, top_n=5):
 
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    sim_scores = sim_scores[1:top_n+1]
+    ssim_score = sim_scores[1:top_n+1]
     movie_indices = [i[0] for i in sim_scores]
     return data['title'].iloc[movie_indices].tolist()
 
@@ -219,4 +219,167 @@ print(f"Các đề xuất cho '{movie_title}': {recommendations}")
 
 
 
+#Biểu đồ thể loại lấy giá trị đầu
+import pandas as pd
+import matplotlib.pyplot as plt
 
+# Đọc dữ liệu từ file CSV
+data = pd.read_csv('output.csv')
+
+# Chuyển cột dateCreated sang định dạng datetime và lọc dữ liệu năm 2023
+data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
+data_2023 = data[data['dateCreated'].dt.year == 2023]
+
+# Tính số lượng phim theo tháng và thể loại trong năm 2023
+monthly_movie_counts = data_2023['dateCreated'].dt.month.value_counts().sort_index()
+genres_count = data_2023.groupby(data_2023['dateCreated'].dt.month)['genres'].value_counts().unstack().fillna(0)
+
+# Sắp xếp các cột thể loại theo tổng số lượng phim
+genres_count = genres_count[genres_count.sum().sort_values(ascending=False).index]
+
+# Tạo một danh sách các thể loại đã sắp xếp
+sorted_genres = genres_count.sum().sort_values(ascending=False).index
+
+# Vẽ biểu đồ
+plt.figure(figsize=(12, 8))
+
+# Biểu đồ số lượng phim theo tháng
+plt.subplot(2, 1, 1)
+monthly_movie_counts.plot(kind='bar', color='skyblue')
+plt.title('Số lượng phim theo tháng trong năm 2023')
+plt.xlabel('Tháng')
+plt.ylabel('Số lượng phim')
+plt.xticks(rotation=0)
+
+# Biểu đồ số lượng phim theo thể loại trong từng tháng
+plt.subplot(2, 1, 2)
+genres_count = genres_count[sorted_genres]  # Áp dụng sắp xếp theo danh sách đã tạo
+genres_count.plot(kind='bar', stacked=True)
+plt.title('Số lượng phim theo thể loại trong từng tháng (2023)')
+plt.xlabel('Tháng')
+plt.ylabel('Số lượng phim')
+plt.xticks(rotation=0)
+
+plt.tight_layout()
+plt.show()
+
+#Biểu đồ thể loại lấy giá trị đầu
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Đọc dữ liệu từ file CSV
+data = pd.read_csv('output.csv')
+
+# Chuyển cột dateCreated sang định dạng datetime và lọc dữ liệu năm 2023
+data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
+data_2023 = data[data['dateCreated'].dt.year == 2023]
+
+# Lấy thể loại đầu tiên từ cột genres
+data_2023['first_genre'] = data_2023['genres'].str.split(',').str[0]
+
+# Tính số lượng phim theo tháng và thể loại đầu tiên trong năm 2023
+monthly_movie_counts = data_2023['dateCreated'].dt.month.value_counts().sort_index()
+genre_counts = data_2023.groupby(data_2023['dateCreated'].dt.month)['first_genre'].value_counts().unstack().fillna(0)
+
+# Sắp xếp các cột thể loại theo tổng số lượng phim
+genre_counts = genre_counts[genre_counts.sum().sort_values(ascending=False).index]
+
+# Tạo biểu đồ
+plt.figure(figsize=(12, 8))
+
+# Biểu đồ số lượng phim theo tháng
+plt.subplot(2, 1, 1)
+monthly_movie_counts.plot(kind='bar', color='skyblue')
+plt.title('Số lượng phim theo tháng trong năm 2023')
+plt.xlabel('Tháng')
+plt.ylabel('Số lượng phim')
+plt.xticks(rotation=0)
+
+# Biểu đồ số lượng phim theo thể loại đầu tiên trong từng tháng
+plt.subplot(2, 1, 2)
+genre_counts.plot(kind='bar', stacked=True)
+plt.title('Số lượng phim theo thể loại đầu tiên trong từng tháng (2023)')
+plt.xlabel('Tháng')
+plt.ylabel('Số lượng phim')
+plt.xticks(rotation=0)
+
+plt.tight_layout()
+plt.show()
+
+# import pandas as pd
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.cluster import KMeans
+# import networkx as nx
+# import matplotlib.pyplot as plt
+
+# # Đọc dữ liệu từ file CSV
+# data = pd.read_csv('output.csv')
+
+# # Tạo dataframe chỉ chứa cột 'genres'
+# selected_data = data[['genres']]
+
+# # Loại bỏ các dòng có giá trị NaN trong cột 'genres'
+# selected_data = selected_data.dropna()
+
+# # Vector hóa dữ liệu 'genres'
+# vectorizer = TfidfVectorizer(stop_words='english')
+# X = vectorizer.fit_transform(selected_data['genres'])
+
+# # Áp dụng thuật toán clustering (ví dụ: K-means)
+# num_clusters = 5  # Số cụm (clusters) cần phân chia
+# kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+# kmeans.fit(X)
+
+# # Thêm nhãn cụm (cluster labels) vào dataframe
+# selected_data['cluster'] = kmeans.labels_
+
+# # Tạo đồ thị NetworkX từ dữ liệu phân cụm
+# G = nx.Graph()
+# for index, row in selected_data.iterrows():
+#     G.add_node(row['genres'], cluster=row['cluster'])
+
+# # Sắp xếp các cụm
+# pos = nx.spring_layout(G, k=0.5)  # Giảm độ căng thẳng của đồ thị
+
+# # Vẽ đồ thị NetworkX với các cụm tương tự được gom lại
+# plt.figure(figsize=(10, 8))
+# node_color = [float(G.nodes[node]['cluster']) for node in G]
+# nx.draw_networkx(G, pos, node_color=node_color, cmap=plt.cm.Set1, with_labels=True, node_size=300)
+# plt.title('Kết quả clustering (Nhóm cụm tương tự)')
+# plt.show()
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Đọc dữ liệu từ file CSV
+data = pd.read_csv('output.csv')
+
+# Chuyển cột dateCreated sang định dạng datetime
+data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
+
+# Lựa chọn các cột quan trọng
+selected_data = data[['dateCreated', 'ratingValue', 'ratingCount', 'genres']]
+
+# Loại bỏ các dòng có giá trị NaN
+selected_data = selected_data.dropna()
+
+# Tạo hai hình vẽ riêng biệt cho 'ratingValue' và 'ratingCount'
+plt.figure(figsize=(12, 8))
+
+plt.subplot(2, 1, 1)
+plt.plot(selected_data['dateCreated'], selected_data['ratingValue'], label='Rating Value', color='blue')
+plt.xlabel('Ngày tạo')
+plt.ylabel('Giá trị')
+plt.title('Phân tích Time Series cho Rating Value')
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(selected_data['dateCreated'], selected_data['ratingCount'], label='Rating Count', color='red')
+plt.xlabel('Ngày tạo')
+plt.ylabel('Giá trị')
+plt.title('Phân tích Time Series cho Rating Count')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
