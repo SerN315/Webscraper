@@ -9,13 +9,12 @@ import os
 
 def scrape():
     options = Options()
-    options.headless = False  # Set to True if you want it to run in the background
+    options.headless = False  
 
     driver = webdriver.Edge()
 
     try:
         # Truy cập vào trang web
-        
         driver.get("https://phimmoiyyy.net/")
         time.sleep(2)
 
@@ -24,12 +23,10 @@ def scrape():
         link_element.click()
         time.sleep(2)
 
-
         while True:
-            
             # Chờ cho đến khi URL chứa "/nam-phat-hanh/2023"
             WebDriverWait(driver, 5).until(EC.url_contains("/nam-phat-hanh/2023"))
-            current_page_url = driver.current_url  # Store the current page UR
+            current_page_url = driver.current_url  # Lưu trữ URL trang hiện tại
             # Lấy danh sách các phần tử article trên trang
             article_elements = driver.find_elements(By.CSS_SELECTOR, "article.item")
 
@@ -53,9 +50,6 @@ def scrape():
                 rating_value_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.dt_rating_vgs")
                 rating_count_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.rating-count")
                 genres_elements = driver.find_elements(By.CSS_SELECTOR, ".sgeneros a")
-
-                # Lấy giá trị của thuộc tính src từ phần tử info
-                
 
                 # Lấy nội dung của các phần tử khác
                 info = info_element.text
@@ -84,48 +78,46 @@ def scrape():
                 driver.get(current_page_url)
                 article_elements = driver.find_elements(By.CSS_SELECTOR, "article.item")
 
-            # Check if the file already exists to determine whether to write headers or not
+            # Kiểm tra xem tập tin đã tồn tại chưa để xác định việc ghi headers hay không
             write_headers = not os.path.exists("output.csv")
 
             # Ghi dữ liệu vào file CSV
             with open("output.csv", "a", newline="", encoding="utf-8") as csv_file:
-               fieldnames = [
-                "title", "info","dateCreated", "ratingValue", "ratingCount", "genres"
-            ]
-               writer = DictWriter(csv_file, fieldnames=fieldnames)
-               write_headers = True
+                fieldnames = [
+                    "title", "info", "dateCreated", "ratingValue", "ratingCount", "genres"
+                ]
+                writer = DictWriter(csv_file, fieldnames=fieldnames)
+                write_headers = True
 
-               if write_headers:
-                writer.writeheader()  # Write headers only if the file is new
+                if write_headers:
+                    writer.writeheader()  # Ghi headers chỉ khi tập tin mới
 
-               writer.writerows(data)
-         # Check if there's a next page
+                writer.writerows(data)
+
+            # Kiểm tra xem có trang tiếp theo không
             next_page_links = driver.find_elements(By.CSS_SELECTOR, '.pagination a #nextpagination')
             next_page_link = next((link for link in next_page_links if 'inactive' not in link.get_attribute('class')), None)
 
             if next_page_link:
-             next_page_number = int(next_page_link.text) if next_page_link.text.isdigit() else 0
+                next_page_number = int(next_page_link.text) if next_page_link.text.isdigit() else 0
 
             if not next_page_link or current_page_url.endswith(f"page/{next_page_number}"):
-               break  # Exit loop if there's no active next page or if it's on the same page
+                break  # Thoát vòng lặp nếu không có trang tiếp theo hoặc đang ở trang hiện tại
 
-    # Click the next page link using JavaScript
+            # Click vào liên kết trang tiếp theo bằng JavaScript
             driver.execute_script("arguments[0].click();", next_page_link)
-            time.sleep(2)  # Add a slight delay for the new page to load
+            time.sleep(2)  # Thêm độ trễ nhỏ để trang mới tải
 
-    # Wait for the new page to load completely
+            # Chờ cho trang mới tải hoàn toàn
             WebDriverWait(driver, 10).until(EC.url_changes(current_page_url))
-            current_page_url = driver.current_url  # Update the current page URL for the next iteration
-
-
+            current_page_url = driver.current_url  # Cập nhật URL trang hiện tại cho vòng lặp tiếp theo
 
     finally:
-        # Close the browser
+        # Đóng trình duyệt
         driver.quit()
 
-# Call the scrape function
+# Gọi hàm scrape
 scrape()
-
 
 
 import pandas as pd
@@ -133,39 +125,53 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
 
-# Tải dữ liệu
-data = pd.read_csv('output.csv')
+# Tải dữ liệu từ tệp CSV
+def load_data(file_path):
+    return pd.read_csv(file_path)
 
-# Hàm để làm sạch và chuyển đổi cột thành các giá trị số
+# Dọn dẹp các cột số bằng cách chuyển chúng thành kiểu số
 def clean_numeric_columns(df, columns):
     for col in columns:
         df[col] = pd.to_numeric(df[col].str.replace(',', ''), errors='coerce')
     return df
 
-# Làm sạch và chuyển đổi các cột 'ratingValue' và 'ratingCount'
-data = clean_numeric_columns(data, ['ratingValue', 'ratingCount'])
+# Điền giá trị thiếu trong cột 'info' và 'genres' bằng chuỗi trống
+def fill_missing_values(df):
+    df['info'] = df['info'].fillna('')
+    df['genres'] = df['genres'].fillna('')
+    return df
 
-# Điền giá trị NaN trong các cột 'info' và 'genres' bằng chuỗi trống
-data['info'] = data['info'].fillna('')
-data['genres'] = data['genres'].fillna('')
+# Kết hợp các đặc trưng khác nhau thành một đặc trưng duy nhất
+def combine_features(df):
+    df['combined_features'] = df['title'] + ' ' + df['info'] + ' ' + df['ratingValue'].astype(str) + ' ' + df['ratingCount'].astype(str) + ' ' + df['genres']
+    return df
 
-# Kết hợp các tính năng liên quan để lọc dữ liệu
-data['combined_features'] = data['title'] + ' ' + data['info'] + ' ' + data['ratingValue'].astype(str) + ' ' + data['ratingCount'].astype(str) + ' ' + data['genres']
+# Tiền xử lý dữ liệu (dọn dẹp, xử lý giá trị thiếu, kết hợp đặc trưng)
+def preprocess_data(data):
+    data = clean_numeric_columns(data, ['ratingValue', 'ratingCount'])
+    data = fill_missing_values(data)
+    data = combine_features(data)
+    return data
 
-# Vector hóa TF-IDF cho phân tích văn bản
-tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-tfidf_matrix = tfidf_vectorizer.fit_transform(data['combined_features'])
+# Vector hóa đặc trưng văn bản sử dụng TF-IDF
+def vectorize_text_features(features):
+    tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf_vectorizer.fit_transform(features)
+    return tfidf_matrix
 
-# Chuẩn hóa các tính năng số
-scaler = MinMaxScaler()
-numerical_features = data[['ratingValue', 'ratingCount']].astype(float)
-data[['ratingValue', 'ratingCount']] = scaler.fit_transform(numerical_features)
+# Chuẩn hóa các đặc trưng số bằng MinMaxScaler
+def normalize_numerical_features(data):
+    scaler = MinMaxScaler()
+    numerical_features = data[['ratingValue', 'ratingCount']].astype(float)
+    data[['ratingValue', 'ratingCount']] = scaler.fit_transform(numerical_features)
+    return data
 
-# Tính ma trận tương đồng cosine
-cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+# Tính độ tương đồng cosine giữa các mục dựa trên đặc trưng
+def calculate_similarity(tfidf_matrix):
+    return cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# Hàm để lấy các đề xuất phim dựa trên sự tương đồng
-def get_movie_recommendations(movie_title, top_n=5):
+# Lấy các đề xuất phim dựa trên điểm tương đồng
+def get_movie_recommendations(data, movie_title, cosine_sim, top_n=10):
     filtered_data = data[data['title'] == movie_title]
     if filtered_data.empty:
         print(f"Không tìm thấy phim '{movie_title}' trong dữ liệu.")
@@ -179,14 +185,34 @@ def get_movie_recommendations(movie_title, top_n=5):
 
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    ssim_score = sim_scores[1:top_n+1]
-    movie_indices = [i[0] for i in sim_scores]
+    movie_indices = [i[0] for i in sim_scores[1:top_n+1]]  # Cắt để lấy top_n đề xuất
     return data['title'].iloc[movie_indices].tolist()
 
-# Ví dụ: Lấy các đề xuất cho một tựa phim
-movie_title = 'Bố Nuôi'
-recommendations = get_movie_recommendations(movie_title)
-print(f"Các đề xuất cho '{movie_title}': {recommendations}")
+# Hàm chính điều hành toàn bộ quá trình
+def main():
+    # Tải dữ liệu
+    file_path = 'output.csv'
+    data = load_data(file_path)
+
+    # Tiền xử lý dữ liệu
+    data = preprocess_data(data)
+
+    # Vector hóa đặc trưng văn bản
+    tfidf_matrix = vectorize_text_features(data['combined_features'])
+
+    # Chuẩn hóa các đặc trưng số
+    data = normalize_numerical_features(data)
+
+    # Tính độ tương đồng cosine
+    cosine_sim = calculate_similarity(tfidf_matrix)
+
+    # Lấy các đề xuất phim
+    movie_title = 'Invincible Season 2'
+    recommendations = get_movie_recommendations(data, movie_title, cosine_sim)
+    print(f"Các đề xuất cho '{movie_title}': {recommendations}")
+
+if __name__ == "__main__":
+    main()
 
 
 # Đoạn code trên thực hiện một hệ thống đề xuất phim dựa trên nội dung, sử dụng các phương pháp xử lý văn bản và tính toán độ tương đồng giữa các bộ phim.
@@ -219,167 +245,84 @@ print(f"Các đề xuất cho '{movie_title}': {recommendations}")
 
 
 
-#Biểu đồ thể loại lấy giá trị đầu
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# Đọc dữ liệu từ file CSV
-data = pd.read_csv('output.csv')
-
-# Chuyển cột dateCreated sang định dạng datetime và lọc dữ liệu năm 2023
-data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
-data_2023 = data[data['dateCreated'].dt.year == 2023]
-
-# Tính số lượng phim theo tháng và thể loại trong năm 2023
-monthly_movie_counts = data_2023['dateCreated'].dt.month.value_counts().sort_index()
-genres_count = data_2023.groupby(data_2023['dateCreated'].dt.month)['genres'].value_counts().unstack().fillna(0)
-
-# Sắp xếp các cột thể loại theo tổng số lượng phim
-genres_count = genres_count[genres_count.sum().sort_values(ascending=False).index]
-
-# Tạo một danh sách các thể loại đã sắp xếp
-sorted_genres = genres_count.sum().sort_values(ascending=False).index
-
-# Vẽ biểu đồ
-plt.figure(figsize=(12, 8))
-
-# Biểu đồ số lượng phim theo tháng
-plt.subplot(2, 1, 1)
-monthly_movie_counts.plot(kind='bar', color='skyblue')
-plt.title('Số lượng phim theo tháng trong năm 2023')
-plt.xlabel('Tháng')
-plt.ylabel('Số lượng phim')
-plt.xticks(rotation=0)
-
-# Biểu đồ số lượng phim theo thể loại trong từng tháng
-plt.subplot(2, 1, 2)
-genres_count = genres_count[sorted_genres]  # Áp dụng sắp xếp theo danh sách đã tạo
-genres_count.plot(kind='bar', stacked=True)
-plt.title('Số lượng phim theo thể loại trong từng tháng (2023)')
-plt.xlabel('Tháng')
-plt.ylabel('Số lượng phim')
-plt.xticks(rotation=0)
-
-plt.tight_layout()
-plt.show()
-
-#Biểu đồ thể loại lấy giá trị đầu
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# Đọc dữ liệu từ file CSV
-data = pd.read_csv('output.csv')
-
-# Chuyển cột dateCreated sang định dạng datetime và lọc dữ liệu năm 2023
-data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
-data_2023 = data[data['dateCreated'].dt.year == 2023]
-
-# Lấy thể loại đầu tiên từ cột genres
-data_2023['first_genre'] = data_2023['genres'].str.split(',').str[0]
-
-# Tính số lượng phim theo tháng và thể loại đầu tiên trong năm 2023
-monthly_movie_counts = data_2023['dateCreated'].dt.month.value_counts().sort_index()
-genre_counts = data_2023.groupby(data_2023['dateCreated'].dt.month)['first_genre'].value_counts().unstack().fillna(0)
-
-# Sắp xếp các cột thể loại theo tổng số lượng phim
-genre_counts = genre_counts[genre_counts.sum().sort_values(ascending=False).index]
-
-# Tạo biểu đồ
-plt.figure(figsize=(12, 8))
-
-# Biểu đồ số lượng phim theo tháng
-plt.subplot(2, 1, 1)
-monthly_movie_counts.plot(kind='bar', color='skyblue')
-plt.title('Số lượng phim theo tháng trong năm 2023')
-plt.xlabel('Tháng')
-plt.ylabel('Số lượng phim')
-plt.xticks(rotation=0)
-
-# Biểu đồ số lượng phim theo thể loại đầu tiên trong từng tháng
-plt.subplot(2, 1, 2)
-genre_counts.plot(kind='bar', stacked=True)
-plt.title('Số lượng phim theo thể loại đầu tiên trong từng tháng (2023)')
-plt.xlabel('Tháng')
-plt.ylabel('Số lượng phim')
-plt.xticks(rotation=0)
-
-plt.tight_layout()
-plt.show()
-
-# import pandas as pd
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.cluster import KMeans
-# import networkx as nx
-# import matplotlib.pyplot as plt
-
-# # Đọc dữ liệu từ file CSV
-# data = pd.read_csv('output.csv')
-
-# # Tạo dataframe chỉ chứa cột 'genres'
-# selected_data = data[['genres']]
-
-# # Loại bỏ các dòng có giá trị NaN trong cột 'genres'
-# selected_data = selected_data.dropna()
-
-# # Vector hóa dữ liệu 'genres'
-# vectorizer = TfidfVectorizer(stop_words='english')
-# X = vectorizer.fit_transform(selected_data['genres'])
-
-# # Áp dụng thuật toán clustering (ví dụ: K-means)
-# num_clusters = 5  # Số cụm (clusters) cần phân chia
-# kmeans = KMeans(n_clusters=num_clusters, random_state=42)
-# kmeans.fit(X)
-
-# # Thêm nhãn cụm (cluster labels) vào dataframe
-# selected_data['cluster'] = kmeans.labels_
-
-# # Tạo đồ thị NetworkX từ dữ liệu phân cụm
-# G = nx.Graph()
-# for index, row in selected_data.iterrows():
-#     G.add_node(row['genres'], cluster=row['cluster'])
-
-# # Sắp xếp các cụm
-# pos = nx.spring_layout(G, k=0.5)  # Giảm độ căng thẳng của đồ thị
-
-# # Vẽ đồ thị NetworkX với các cụm tương tự được gom lại
-# plt.figure(figsize=(10, 8))
-# node_color = [float(G.nodes[node]['cluster']) for node in G]
-# nx.draw_networkx(G, pos, node_color=node_color, cmap=plt.cm.Set1, with_labels=True, node_size=300)
-# plt.title('Kết quả clustering (Nhóm cụm tương tự)')
-# plt.show()
-
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
 
-# Đọc dữ liệu từ file CSV
+# Đọc dữ liệu từ file CSV và chuyển cột dateCreated sang định dạng datetime
 data = pd.read_csv('output.csv')
-
-# Chuyển cột dateCreated sang định dạng datetime
 data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
+data['ratingValue'] = pd.to_numeric(data['ratingValue'], errors='coerce')
+data['ratingCount'] = pd.to_numeric(data['ratingCount'], errors='coerce')
 
 # Lựa chọn các cột quan trọng
-selected_data = data[['dateCreated', 'ratingValue', 'ratingCount', 'genres']]
+selected_data = data[['dateCreated', 'ratingCount']]
 
 # Loại bỏ các dòng có giá trị NaN
 selected_data = selected_data.dropna()
 
-# Tạo hai hình vẽ riêng biệt cho 'ratingValue' và 'ratingCount'
-plt.figure(figsize=(12, 8))
+# Chia dữ liệu thành train và test
+train_data = selected_data.iloc[:-300]  # Sử dụng 10 dòng cuối cùng làm test
 
-plt.subplot(2, 1, 1)
-plt.plot(selected_data['dateCreated'], selected_data['ratingValue'], label='Rating Value', color='blue')
+# Xây dựng mô hình ARIMA
+model = ARIMA(train_data['ratingCount'], order=(5,1,0))  # Chọn order phù hợp
+model_fit = model.fit()
+
+# Dự đoán
+forecast = model_fit.forecast(steps=10)  # Dự đoán cho 10 bước tiếp theo
+
+# Tạo chuỗi thời gian mới cho dự đoán
+last_date = train_data['dateCreated'].iloc[-1]
+forecast_dates = pd.date_range(start=last_date, periods=11, freq='M')[1:]
+
+# Đánh giá mô hình
+model_fit.plot_diagnostics(figsize=(15, 12))
+plt.show()
+
+# So sánh dự đoán với dữ liệu thực tế
+test_data = selected_data.iloc[-300:]
+plt.figure(figsize=(12, 6))
+plt.plot(test_data['dateCreated'], test_data['ratingCount'], label='Actual', color='blue')
+plt.plot(forecast_dates, forecast, label='Forecast', color='green')
 plt.xlabel('Ngày tạo')
-plt.ylabel('Giá trị')
-plt.title('Phân tích Time Series cho Rating Value')
+plt.ylabel('Rating Count')
+plt.title('So sánh dự đoán với dữ liệu thực tế')
 plt.legend()
+plt.show()
 
-plt.subplot(2, 1, 2)
-plt.plot(selected_data['dateCreated'], selected_data['ratingCount'], label='Rating Count', color='red')
+# Tối ưu hóa mô hình
+best_aic = float("inf")
+best_order = None
+
+for p in range(3):
+    for d in range(3):
+        for q in range(3):
+            try:
+                model = ARIMA(train_data['ratingCount'], order=(p,d,q))
+                model_fit = model.fit()
+                if model_fit.aic < best_aic:
+                    best_aic = model_fit.aic
+                    best_order = (p, d, q)
+            except:
+                continue
+
+print(f"Best AIC: {best_aic}, Best Order: {best_order}")
+
+# Xây dựng lại mô hình với tham số tốt nhất
+best_model = ARIMA(train_data['ratingCount'], order=best_order)
+best_model_fit = best_model.fit()
+
+# Dự đoán với mô hình tối ưu hóa
+best_forecast = best_model_fit.forecast(steps=10)
+
+# Biểu đồ dự đoán mới
+plt.figure(figsize=(12, 6))
+plt.plot(selected_data['dateCreated'], selected_data['ratingCount'], label='Actual', color='blue')
+plt.plot(train_data['dateCreated'], best_model_fit.fittedvalues, label='Fitted', color='red')
+plt.plot(forecast_dates, best_forecast, label='Forecast', color='green')
 plt.xlabel('Ngày tạo')
-plt.ylabel('Giá trị')
-plt.title('Phân tích Time Series cho Rating Count')
+plt.ylabel('Rating Count')
+plt.title('Dự đoán chuỗi thời gian cho Rating Count (Mô hình tối ưu hóa)')
 plt.legend()
-
-plt.tight_layout()
 plt.show()
