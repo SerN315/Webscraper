@@ -249,6 +249,7 @@ if __name__ == "__main__":
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Đọc dữ liệu từ file CSV và chuyển cột dateCreated sang định dạng datetime
 data = pd.read_csv('output.csv')
@@ -326,3 +327,4 @@ plt.ylabel('Rating Count')
 plt.title('Dự đoán chuỗi thời gian cho Rating Count (Mô hình tối ưu hóa)')
 plt.legend()
 plt.show()
+

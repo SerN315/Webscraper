@@ -1,80 +1,35 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-from statsmodels.tsa.arima.model import ARIMA
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
-# Đọc dữ liệu từ file CSV và chuyển cột dateCreated sang định dạng datetime
-data = pd.read_csv('output.csv')
-data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
-data['ratingValue'] = pd.to_numeric(data['ratingValue'], errors='coerce')
-data['ratingCount'] = pd.to_numeric(data['ratingCount'], errors='coerce')
+# Đọc dữ liệu từ file CSV
+data = pd.read_csv('output.csv')  # Thay 'your_data.csv' bằng tên file CSV chứa dữ liệu
 
-# Lựa chọn các cột quan trọng
-selected_data = data[['dateCreated', 'ratingCount']]
+# Tiền xử lý dữ liệu
+# Tách các giá trị thể loại thành các cột riêng biệt
+data['genres'] = data['genres'].apply(eval)  # Chuyển chuỗi thể loại thành list
+genres_columns = pd.get_dummies(data['genres'].apply(pd.Series).stack()).sum(level=0)
+data = pd.concat([data, genres_columns], axis=1)
 
-# Loại bỏ các dòng có giá trị NaN
-selected_data = selected_data.dropna()
+# Lựa chọn các cột quan trọng cho việc huấn luyện mô hình
+selected_columns = ['ratingValue', 'ratingCount'] + genres_columns.columns.tolist()
+X = pd.concat([data[selected_columns], genres_columns], axis=1)
+y = data['potential_success']  # Assumed label for potential success
 
-# Chia dữ liệu thành train và test
-train_data = selected_data.iloc[:-300]  # Sử dụng 10 dòng cuối cùng làm test
+# Chia dữ liệu thành train và test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Xây dựng mô hình ARIMA
-model = ARIMA(train_data['ratingCount'], order=(5,1,0))  # Chọn order phù hợp
-model_fit = model.fit()
+# Xây dựng mô hình Random Forest
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
 
-# Dự đoán
-forecast = model_fit.forecast(steps=10)  # Dự đoán cho 10 bước tiếp theo
-
-# Tạo chuỗi thời gian mới cho dự đoán
-last_date = train_data['dateCreated'].iloc[-1]
-forecast_dates = pd.date_range(start=last_date, periods=11, freq='M')[1:]
+# Dự đoán trên tập test
+y_pred = model.predict(X_test)
 
 # Đánh giá mô hình
-model_fit.plot_diagnostics(figsize=(15, 12))
-plt.show()
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy}")
 
-# So sánh dự đoán với dữ liệu thực tế
-test_data = selected_data.iloc[-300:]
-plt.figure(figsize=(12, 6))
-plt.plot(test_data['dateCreated'], test_data['ratingCount'], label='Actual', color='blue')
-plt.plot(forecast_dates, forecast, label='Forecast', color='green')
-plt.xlabel('Ngày tạo')
-plt.ylabel('Rating Count')
-plt.title('So sánh dự đoán với dữ liệu thực tế')
-plt.legend()
-plt.show()
-
-# Tối ưu hóa mô hình
-best_aic = float("inf")
-best_order = None
-
-for p in range(3):
-    for d in range(3):
-        for q in range(3):
-            try:
-                model = ARIMA(train_data['ratingCount'], order=(p,d,q))
-                model_fit = model.fit()
-                if model_fit.aic < best_aic:
-                    best_aic = model_fit.aic
-                    best_order = (p, d, q)
-            except:
-                continue
-
-print(f"Best AIC: {best_aic}, Best Order: {best_order}")
-
-# Xây dựng lại mô hình với tham số tốt nhất
-best_model = ARIMA(train_data['ratingCount'], order=best_order)
-best_model_fit = best_model.fit()
-
-# Dự đoán với mô hình tối ưu hóa
-best_forecast = best_model_fit.forecast(steps=10)
-
-# Biểu đồ dự đoán mới
-plt.figure(figsize=(12, 6))
-plt.plot(selected_data['dateCreated'], selected_data['ratingCount'], label='Actual', color='blue')
-plt.plot(train_data['dateCreated'], best_model_fit.fittedvalues, label='Fitted', color='red')
-plt.plot(forecast_dates, best_forecast, label='Forecast', color='green')
-plt.xlabel('Ngày tạo')
-plt.ylabel('Rating Count')
-plt.title('Dự đoán chuỗi thời gian cho Rating Count (Mô hình tối ưu hóa)')
-plt.legend()
-plt.show()
+# Báo cáo classification
+print(classification_report(y_test, y_pred))
