@@ -12,7 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 def scrape():
     options = Options()
     options.add_argument('--headless')
-    driver = webdriver.Edge(options=options)
+    driver = webdriver.Edge()
     try:
         # Truy cập vào trang web
         driver.get("https://www.lazada.vn/")
