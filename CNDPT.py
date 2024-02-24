@@ -8,8 +8,6 @@ from csv import DictWriter
 import time
 import os
 from selenium.common.exceptions import TimeoutException
-from fake_useragent import UserAgent
-
 def scrape():
     options = Options()
     ua = UserAgent()
@@ -149,7 +147,8 @@ def create_database():
             price TEXT,
             TenSP TEXT,
             DG TEXT,
-            SoDG TEXT
+            SoDG TEXT,
+            source TEXT DEFAULT 'lazada'
         )
     ''')
 
@@ -171,14 +170,14 @@ def insert_data_into_database(row_data):
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()
 
-    # Insert product data
+    # Insert product data with the 'source' column
     cursor.execute('''
-        INSERT INTO products (link, price, TenSP, DG, SoDG) VALUES (?, ?, ?, ?, ?)
-    ''', (row_data['link'], row_data['price'], row_data['TenSP'], row_data['DG'], row_data['SoDG']))
+        INSERT INTO products (link, price, TenSP, DG, SoDG, source) VALUES (?, ?, ?, ?, ?, ?)
+    ''', (row_data['link'], row_data['price'], row_data['TenSP'], row_data['DG'], row_data['SoDG'], 'lazada'))
 
     product_id = cursor.lastrowid  # Get the ID of the last inserted product
 
-    # Insert comments data
+    # Insert comments data without the 'source' column
     usernames = row_data.get('usernames', [])
     ratings = row_data.get('ratings', [])
     comments = row_data.get('comments', [])
@@ -225,3 +224,31 @@ create_database()
 
 # Format data from CSV and insert into SQLite database
 format_data_and_insert()
+
+
+#facecollector
+import cv2
+video = cv2.VideoCapture(0)
+facedetect = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+id = input("Chon ID nguoi dung")
+count = 0
+while True:
+    ret,frame = video.read() 
+    #convert anh ve mau xam de giam do phuc tap cua anh
+    gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    # dung ham dectect va specifier de nhan dien mat
+    faces = facedetect.detectMultiScale(gray,1.3,5)
+    for (x,y,w,h) in faces: #specifier cho x y axis va width height
+        count=count+1
+        cv2.imwrite("data/User."+str(id)+"."+str(count)+".jpg",gray[y:y+h,x:x+w])
+        cv2.rectangle(frame,(x,y),(x+w , y+h),(119, 221, 119),1) #2 ngoac dau la de crop mat , ngoac sau la mau cua facedetector box va 1 la do day cua no
+
+    cv2.imshow("Frame",frame)
+    k=cv2.waitKey(1)
+    if count>200:
+        break
+    if k==ord("q"):
+        break
+    video.release()
+    cv2.destroyAllWindows()
+    print("Da thu thap du data !!!!")
