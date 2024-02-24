@@ -249,6 +249,91 @@ while True:
         break
     if k==ord("q"):
         break
-    video.release()
-    cv2.destroyAllWindows()
-    print("Da thu thap du data !!!!")
+video.release()
+cv2.destroyAllWindows()
+print("Da thu thap du data !!!!")
+
+
+
+#training
+import face_recognition
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+path = "data"
+
+def getImageID(path):
+    imagePath = [os.path.join(path, f) for f in os.listdir(path)]
+    faces = []
+    ids = []
+    for imagePaths in imagePath:
+        faceImage = face_recognition.load_image_file(imagePaths)
+        faceLocations = face_recognition.face_locations(faceImage)
+        
+        if len(faceLocations) > 0:
+            faceNP = face_recognition.face_encodings(faceImage, faceLocations)[0]
+            Id = (os.path.split(imagePaths)[-1].split(".")[1])
+            Id = int(Id)
+            faces.append(faceNP)
+            ids.append(Id)
+            
+            # plt.imshow(faceImage)
+            # plt.show()
+            
+    return ids, faces
+
+IDs, facedata = getImageID(path)
+np.savez("Trainer.npz", facedata=facedata, IDs=IDs)
+plt.close('all')
+print("Da Train xong")
+
+
+
+#testing
+import cv2
+import face_recognition
+import numpy as np
+
+video = cv2.VideoCapture(0)
+video.set(cv2.CAP_PROP_FPS, 60)  # Set the frame rate to 60 fps
+name_list = ["", "Nguyen"]
+
+# Load the pre-trained face recognition model
+known_faces = np.load("Trainer.npz")
+facedata = known_faces["facedata"]
+IDs = known_faces["IDs"]
+
+while True:
+    ret, frame = video.read()
+    # Convert the frame to RGB format
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Find all face locations in the frame
+    face_locations = face_recognition.face_locations(rgb_frame)
+
+    for (top, right, bottom, left) in face_locations:
+        # Extract the face encoding from the current frame
+        face_encoding = face_recognition.face_encodings(rgb_frame, [(top, right, bottom, left)])[0]
+
+        # Perform face recognition using the known face encodings
+        face_distances = face_recognition.face_distance(facedata, face_encoding)
+        min_distance_index = np.argmin(face_distances)
+        min_distance = face_distances[min_distance_index]
+
+        if min_distance < 0.6:
+            name = name_list[IDs[min_distance_index]]
+        else:
+            name = "khong biet luon"
+
+        # Draw a rectangle around the face and display the name
+        cv2.rectangle(frame, (left, top), (right, bottom), (119, 221, 119), 1)
+        cv2.putText(frame, name, (left, top - 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (119, 221, 119), 2)
+
+    cv2.imshow("Frame", frame)
+    k = cv2.waitKey(1)
+    if k == ord("q"):
+        break
+
+video.release()
+cv2.destroyAllWindows()
