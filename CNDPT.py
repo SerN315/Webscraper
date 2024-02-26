@@ -346,7 +346,7 @@ while True:
         if min_distance < 0.6:
             name = name_list[IDs[min_distance_index]]
         else:
-            name = "Unknown"
+            name = "Khong biet luon"
 
         # Draw a rectangle around the face and display the name
         cv2.rectangle(frame, (left, top), (right, bottom), (119, 221, 119), 1)
@@ -374,17 +374,3 @@ while True:
 video.release()
 cv2.destroyAllWindows()
 
-        # # Extract the face ROI for emotion detection
-        # face_roi = frame[top:bottom, left:right]
-        # face_roi_gray = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
-        # face_roi_gray = cv2.resize(face_roi_gray, (48, 48))
-        # face_roi_gray = face_roi_gray.astype("float") / 255.0
-        # face_roi_gray = np.expand_dims(face_roi_gray, 0)
-        # face_roi_gray = np.expand_dims(face_roi_gray, -1)
-
-        # # Perform emotion detection
-        # emotion_preds = emotion_model.forward(face_roi_gray)[0]
-        # emotion_label = emotion_labels[np.argmax(emotion_preds)]
-
-        # # Display the predicted emotion
-        # cv2.putText(frame, emotion_label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (119, 221, 119), 2)
