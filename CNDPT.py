@@ -228,34 +228,48 @@ format_data_and_insert()
 
 #facecollector
 import cv2
+import os
+
+data_dir = "data"
+emotion_labels = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
+
+
 video = cv2.VideoCapture(0)
 facedetect = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-id = input("Chon ID nguoi dung")
+id = input("Chọn ID người dùng: ")
+emotion_label = input(" Nhãn cảm xúc (Angry, Disgust, Fear, Happy, Sad,Surprise, Neutral): ")
 count = 0
-while True:
-    ret,frame = video.read() 
-    #convert anh ve mau xam de giam do phuc tap cua anh
-    gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    # dung ham dectect va specifier de nhan dien mat
-    faces = facedetect.detectMultiScale(gray,1.3,5)
-    for (x,y,w,h) in faces: #specifier cho x y axis va width height
-        count=count+1
-        cv2.imwrite("data/User."+str(id)+"."+str(count)+".jpg",gray[y:y+h,x:x+w])
-        cv2.rectangle(frame,(x,y),(x+w , y+h),(119, 221, 119),1) #2 ngoac dau la de crop mat , ngoac sau la mau cua facedetector box va 1 la do day cua no
 
-    cv2.imshow("Frame",frame)
-    k=cv2.waitKey(1)
-    if count>200:
+while True:
+    ret, frame = video.read()
+    # Chuyển đổi ảnh về màu xám để giảm độ phức tạp của ảnh
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Sử dụng hàm detectMultiScale để nhận diện khuôn mặt
+    faces = facedetect.detectMultiScale(gray, 1.3, 5)
+    
+    for (x, y, w, h) in faces:
+        count += 1
+        face_img = gray[y:y+h, x:x+w]
+        # Lưu ảnh khuôn mặt với tên file có định dạng "User.ID.count.emotion.jpg"
+        file_name = f"User.{id}.{count}.{emotion_label}.jpg"
+        cv2.imwrite(os.path.join(data_dir, file_name), face_img)
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (119, 221, 119), 1) 
+        
+    cv2.imshow("Frame", frame)
+    k = cv2.waitKey(1)
+    
+    if count > 50:
         break
-    if k==ord("q"):
+    if k == ord("q"):
         break
+
 video.release()
 cv2.destroyAllWindows()
-print("Da thu thap du data !!!!")
+print("Đã thu thập dữ liệu và gán nhãn cảm xúc thành công!")
 
 
 
-#training
+
 import face_recognition
 import numpy as np
 import os
@@ -266,46 +280,54 @@ path = "data"
 def getImageID(path):
     imagePath = [os.path.join(path, f) for f in os.listdir(path)]
     faces = []
+    emotion_labels = []
     ids = []
+
     for imagePaths in imagePath:
         faceImage = face_recognition.load_image_file(imagePaths)
         faceLocations = face_recognition.face_locations(faceImage)
-        
+
         if len(faceLocations) > 0:
             faceNP = face_recognition.face_encodings(faceImage, faceLocations)[0]
-            Id = (os.path.split(imagePaths)[-1].split(".")[1])
-            Id = int(Id)
+            emotion_label = os.path.split(imagePaths)[-1].split(".")[3]
+            Id = int(os.path.split(imagePaths)[-1].split(".")[1])
+
             faces.append(faceNP)
+            emotion_labels.append(emotion_label)
             ids.append(Id)
-            
-            # plt.imshow(faceImage)
-            # plt.show()
-            
-    return ids, faces
 
-IDs, facedata = getImageID(path)
-np.savez("Trainer.npz", facedata=facedata, IDs=IDs)
+    return ids, faces, emotion_labels
+
+IDs, facedata, emotion_labels = getImageID(path)
+np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
 plt.close('all')
-print("Da Train xong")
+print("Đã xử lý dữ liệu thành công!")
 
 
-
-#testing
 import cv2
 import face_recognition
 import numpy as np
-
-video = cv2.VideoCapture(0)
-video.set(cv2.CAP_PROP_FPS, 60)  # Set the frame rate to 60 fps
-name_list = ["", "Nguyen"]
+import keras
+from tensorflow.keras.models import load_model
 
 # Load the pre-trained face recognition model
 known_faces = np.load("Trainer.npz")
 facedata = known_faces["facedata"]
 IDs = known_faces["IDs"]
 
+# Load the pre-trained emotion detection model
+emotion_model = load_model("fer2013_mini_XCEPTION.102-0.66.hdf5", compile=False)
+emotion_labels = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
+
+video = cv2.VideoCapture(0)
+video.set(cv2.CAP_PROP_FPS, 60)  # Set the frame rate to 60 fps
+name_list = ["", "Nguyen"]
+
 while True:
     ret, frame = video.read()
+    if not ret:
+        break
+
     # Convert the frame to RGB format
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -324,16 +346,31 @@ while True:
         if min_distance < 0.6:
             name = name_list[IDs[min_distance_index]]
         else:
-            name = "khong biet luon"
+            name = "Khong biet luon"
 
         # Draw a rectangle around the face and display the name
         cv2.rectangle(frame, (left, top), (right, bottom), (119, 221, 119), 1)
         cv2.putText(frame, name, (left, top - 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (119, 221, 119), 2)
 
+        # Extract the face ROI for emotion detection
+        face_roi = frame[top:bottom, left:right]
+        face_roi_gray = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
+        face_roi_gray = cv2.resize(face_roi_gray, (64, 64))
+        face_roi_gray = face_roi_gray.astype("float") / 255.0
+        face_roi_gray = np.expand_dims(face_roi_gray, 0)
+        face_roi_gray = np.expand_dims(face_roi_gray, -1)
+
+        # Perform emotion detection
+        emotion_preds = emotion_model.predict(face_roi_gray)[0]
+        emotion_label = emotion_labels[np.argmax(emotion_preds)]
+
+        # Display the predicted emotion
+        cv2.putText(frame, emotion_label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (119, 221, 119), 2)
+
     cv2.imshow("Frame", frame)
-    k = cv2.waitKey(1)
-    if k == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 video.release()
 cv2.destroyAllWindows()
+
