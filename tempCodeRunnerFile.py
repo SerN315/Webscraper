@@ -1,5 +1,3 @@
-
-
 #testing
 import cv2
 import face_recognition
@@ -47,4 +45,3 @@ while True:
 
 video.release()
 cv2.destroyAllWindows()
-print("Data collection completed!")
