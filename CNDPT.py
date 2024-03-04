@@ -10,7 +10,7 @@ import os
 from selenium.common.exceptions import TimeoutException
 def scrape():
     options = Options()
-    ua = UserAgent()
+    # ua = UserAgent()
     user_agent = ua.random
     options.add_argument(f'user-agent={user_agent}')
     driver = webdriver.Chrome(options=options)
@@ -258,7 +258,7 @@ while True:
     cv2.imshow("Frame", frame)
     k = cv2.waitKey(1)
     
-    if count > 50:
+    if count > 500:
         break
     if k == ord("q"):
         break
@@ -268,12 +268,11 @@ cv2.destroyAllWindows()
 print("Đã thu thập dữ liệu và gán nhãn cảm xúc thành công!")
 
 
-
-
 import face_recognition
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 path = "data"
 
@@ -287,28 +286,38 @@ def getImageID(path):
         faceImage = face_recognition.load_image_file(imagePaths)
         faceLocations = face_recognition.face_locations(faceImage)
 
-        if len(faceLocations) > 0:
-            faceNP = face_recognition.face_encodings(faceImage, faceLocations)[0]
+        for faceLocation in faceLocations:
+            top, right, bottom, left = faceLocation
+            faceImageAligned = face_recognition.face_encodings(faceImage, [faceLocation], num_jitters=10)[0]
+
             emotion_label = os.path.split(imagePaths)[-1].split(".")[3]
             Id = int(os.path.split(imagePaths)[-1].split(".")[1])
 
-            faces.append(faceNP)
+            faces.append(faceImageAligned)
             emotion_labels.append(emotion_label)
             ids.append(Id)
 
     return ids, faces, emotion_labels
 
 IDs, facedata, emotion_labels = getImageID(path)
-np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
-plt.close('all')
-print("Đã xử lý dữ liệu thành công!")
+
+# Show progress bar for training
+for i in tqdm(range(100), desc='Training'):
+    # Perform training steps here
+    # ...
+
+# Save the trained model
+ np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
+ plt.close('all')
+ print("Đã xử lý dữ liệu thành công!")
+
 
 
 import cv2
 import face_recognition
 import numpy as np
-import keras
 from tensorflow.keras.models import load_model
+from sklearn.metrics import classification_report, confusion_matrix
 
 # Load the pre-trained face recognition model
 known_faces = np.load("Trainer.npz")
@@ -321,7 +330,7 @@ emotion_labels = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutr
 
 video = cv2.VideoCapture(0)
 video.set(cv2.CAP_PROP_FPS, 60)  # Set the frame rate to 60 fps
-name_list = ["", "Nguyen"]
+name_list = ["", "Nguyen","Khanh"]
 
 while True:
     ret, frame = video.read()
@@ -343,10 +352,10 @@ while True:
         min_distance_index = np.argmin(face_distances)
         min_distance = face_distances[min_distance_index]
 
-        if min_distance < 0.6:
+        if min_distance < 0.55:
             name = name_list[IDs[min_distance_index]]
         else:
-            name = "Khong biet luon"
+            name = "Unknown"
 
         # Draw a rectangle around the face and display the name
         cv2.rectangle(frame, (left, top), (right, bottom), (119, 221, 119), 1)
@@ -367,10 +376,18 @@ while True:
         # Display the predicted emotion
         cv2.putText(frame, emotion_label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (119, 221, 119), 2)
 
-    cv2.imshow("Frame", frame)
+        # Print the accuracy and classification report
+        print("Accuracy:", min_distance)
+        print("Classification Report:")
+        print(classification_report([emotion_label], [name]))
+
+    # Display the video frame
+    cv2.imshow("Video Feed", frame)
+
+    # Wait for the 'q' key to quit
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
+# Release the video capture and close all windows
 video.release()
 cv2.destroyAllWindows()
-
