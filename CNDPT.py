@@ -10,7 +10,7 @@ import os
 from selenium.common.exceptions import TimeoutException
 def scrape():
     options = Options()
-    ua = UserAgent()
+    # ua = UserAgent()
     user_agent = ua.random
     options.add_argument(f'user-agent={user_agent}')
     driver = webdriver.Chrome(options=options)
@@ -258,7 +258,7 @@ while True:
     cv2.imshow("Frame", frame)
     k = cv2.waitKey(1)
     
-    if count > 50:
+    if count > 500:
         break
     if k == ord("q"):
         break
@@ -274,42 +274,72 @@ import face_recognition
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from PIL import Image
+import concurrent.futures
+import multiprocessing
 
-path = "data"
 
-def getImageID(path):
-    imagePath = [os.path.join(path, f) for f in os.listdir(path)]
+def process_images(imagePaths):
     faces = []
-    emotion_labels = []
     ids = []
+    emotion_labels = []
 
-    for imagePaths in imagePath:
-        faceImage = face_recognition.load_image_file(imagePaths)
-        faceLocations = face_recognition.face_locations(faceImage)
+    for imagePath in imagePaths:
+        faceImage = face_recognition.load_image_file(imagePath)
+        faceImage = Image.fromarray(faceImage)  # Convert to PIL Image for resizing
+        faceImage = faceImage.resize((256, 256))  # Resize the image to a smaller size
+        faceImage = np.array(faceImage)  # Convert back to numpy array
+        faceLocations = face_recognition.face_locations(faceImage, model='cnn')
 
         for faceLocation in faceLocations:
             top, right, bottom, left = faceLocation
-            faceImageAligned = face_recognition.face_encodings(faceImage, [faceLocation], num_jitters=10)[0]
-
-            emotion_label = os.path.split(imagePaths)[-1].split(".")[3]
-            Id = int(os.path.split(imagePaths)[-1].split(".")[1])
+            faceImageAligned = face_recognition.face_encodings(faceImage, [faceLocation], num_jitters=5)[0]
+            Id = int(os.path.split(imagePath)[-1].split(".")[1])
+            emotion_label = os.path.split(imagePath)[-1].split(".")[3]
 
             faces.append(faceImageAligned)
-            emotion_labels.append(emotion_label)
             ids.append(Id)
+            emotion_labels.append(emotion_label)
 
     return ids, faces, emotion_labels
 
-IDs, facedata, emotion_labels = getImageID(path)
-np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
-plt.close('all')
-print("Đã xử lý dữ liệu thành công!")
+
+def getImageID(path):
+    imagePath = [os.path.join(path, f) for f in os.listdir(path)]
+    batch_size = 10  # Number of images to process in each batch
+    batches = [imagePath[i:i + batch_size] for i in range(0, len(imagePath), batch_size)]
+
+    faces = []
+    ids = []
+    emotion_labels = []
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        results = executor.map(process_images, batches)
+        for result in results:
+            ids.extend(result[0])
+            faces.extend(result[1])
+            emotion_labels.extend(result[2])
+
+    return ids, faces, emotion_labels
+
+
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
+
+    path = "data"
+    IDs, facedata, emotion_labels = getImageID(path)
+
+    # Save the trained model
+    np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
+    plt.close('all')
+    print("Successfully processed the data!")
+
 
 import cv2
 import face_recognition
 import numpy as np
-import keras
 from tensorflow.keras.models import load_model
+from sklearn.metrics import classification_report
 
 # Load the pre-trained face recognition model
 known_faces = np.load("Trainer.npz")
@@ -322,7 +352,7 @@ emotion_labels = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutr
 
 video = cv2.VideoCapture(0)
 video.set(cv2.CAP_PROP_FPS, 60)  # Set the frame rate to 60 fps
-name_list = ["", "Nguyen"]
+name_list = ["", "Nguyen", "Khanh"]
 
 while True:
     ret, frame = video.read()
@@ -341,13 +371,13 @@ while True:
 
         # Perform face recognition using the known face encodings
         face_distances = face_recognition.face_distance(facedata, face_encoding)
+        min_distance = min(face_distances)
         min_distance_index = np.argmin(face_distances)
-        min_distance = face_distances[min_distance_index]
 
-        if min_distance < 0.6:
+        if min_distance < 0.55:
             name = name_list[IDs[min_distance_index]]
         else:
-            name = "Khong biet luon"
+            name = "Unknown"
 
         # Draw a rectangle around the face and display the name
         cv2.rectangle(frame, (left, top), (right, bottom), (119, 221, 119), 1)
@@ -368,10 +398,17 @@ while True:
         # Display the predicted emotion
         cv2.putText(frame, emotion_label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (119, 221, 119), 2)
 
-    cv2.imshow("Frame", frame)
+        # Print the classification report for each face
+        print(f"Classification Report for {name}:")
+        print(classification_report([name], [emotion_label]))
+
+    # Display the video frame
+    cv2.imshow("Video Feed", frame)
+
+    # Wait for the 'q' key to quit
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
+# Release the video capture and close all windows
 video.release()
 cv2.destroyAllWindows()
-
