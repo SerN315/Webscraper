@@ -72,6 +72,12 @@ model.fit(X_normalized, y)
 coefficients = pd.DataFrame({"Feature": X.columns, "Coefficient": model.coef_})
 print(coefficients)
 
+
+
+
+
+
+
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
