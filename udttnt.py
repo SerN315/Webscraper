@@ -19,6 +19,8 @@ with open(file_path, "r") as csv_file:
 
 
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 file_path = "winequality-red.csv"  # Replace with the actual file path
 
@@ -35,12 +37,21 @@ print("Alcohol Mean:", alcohol_mean)
 print("Alcohol Median:", alcohol_median)
 print("Alcohol-Quality Correlation:", alcohol_correlation)
 
+# Create a correlation matrix
+correlation_matrix = df.corr()
+
+# Plot the correlation matrix heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm")
+plt.title("Correlation Matrix Heatmap")
+plt.show()
 
 
 
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 file_path = "winequality-red.csv"  # Replace with the actual file path
 
@@ -68,25 +79,35 @@ X_normalized = scaler.fit_transform(X)
 model = LinearRegression()
 model.fit(X_normalized, y)
 
-# Print the coefficients of the model
+# Get the coefficients of the model
 coefficients = pd.DataFrame({"Feature": X.columns, "Coefficient": model.coef_})
-print(coefficients)
+
+# Plot the feature importance
+plt.figure(figsize=(10, 6))
+plt.bar(coefficients["Feature"], coefficients["Coefficient"])
+plt.xlabel("Feature")
+plt.ylabel("Coefficient")
+plt.title("Feature Importance")
+plt.xticks(rotation=45)
+plt.show()
+
 
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 
-file_path = "winequality-red.csv"  # Thay bằng đường dẫn thực tế tới file
+file_path = "winequality-red.csv"  # Replace with the actual file path
 
-# Đọc file CSV thành DataFrame của pandas
+# Read the CSV file into a pandas DataFrame
 df = pd.read_csv(file_path)
 
-# Định nghĩa các cột quan tâm
+# Define the columns of interest
 columns_of_interest = [
     "fixed acidity", "volatile acidity", "citric acid", "residual sugar",
     "chlorides", "free sulfur dioxide", "density", "sulphates", "pH", "alcohol", "quality"
 ]
 
-# Lấy các cột quan tâm từ DataFrame
+# Subset the DataFrame with the columns of interest
 subset_df = df[columns_of_interest]
 
 # Split the data into features (X) and target variable (y)
@@ -97,17 +118,24 @@ y = subset_df["quality"]
 model = LinearRegression()
 model.fit(X, y)
 
-# Lấy giá trị tuyệt đối của các hệ số
+# Get the absolute values of the coefficients
 abs_coefficients = abs(model.coef_)
 
-# Sắp xếp theo giá trị tuyệt đối giảm dần
+# Sort the coefficients in descending order
 sorted_indices = abs_coefficients.argsort()[::-1]
 
-# Chọn ra 3 thuộc tính quan trọng nhất
+# Select the top 3 most important features
 top_3_indices = sorted_indices[:3]
 top_3_features = X.columns[top_3_indices]
 
-# In ra 3 thuộc tính quan trọng nhất và tương quan tuyến tính với quality
+# Plot bar plots for the top 3 features with the target variable
 for feature in top_3_features:
-    correlation = df[feature].corr(df["quality"])
-    print(f"{feature}: {correlation}")
+    plt.figure(figsize=(8, 6))
+    grouped_data = df.groupby(feature)["quality"].mean()
+    if len(grouped_data) > 10:
+        grouped_data = grouped_data.sample(n=10)  # Limit to 10 random samples if more than 10 unique values
+    grouped_data.plot(kind="bar")
+    plt.xlabel(feature)
+    plt.ylabel("Average Quality")
+    plt.title(f"Bar Plot: Average Quality by {feature}")
+    plt.show()

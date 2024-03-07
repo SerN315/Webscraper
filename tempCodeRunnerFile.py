@@ -1,63 +1,47 @@
-import face_recognition
-import numpy as np
-import os
+import pandas as pd
+from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
-from PIL import Image
-import concurrent.futures
-import multiprocessing
 
+file_path = "winequality-red.csv"  # Replace with the actual file path
 
-def process_images(imagePaths):
-    faces = []
-    ids = []
-    emotion_labels = []
+# Read the CSV file into a pandas DataFrame
+df = pd.read_csv(file_path)
 
-    for imagePath in imagePaths:
-        faceImage = face_recognition.load_image_file(imagePath)
-        faceImage = Image.fromarray(faceImage)  # Convert to PIL Image for resizing
-        faceImage = faceImage.resize((256, 256))  # Resize the image to a smaller size
-        faceImage = np.array(faceImage)  # Convert back to numpy array
-        faceLocations = face_recognition.face_locations(faceImage, model='cnn')
+# Define the columns of interest
+columns_of_interest = [
+    "fixed acidity", "volatile acidity", "citric acid", "residual sugar",
+    "chlorides", "free sulfur dioxide", "density", "sulphates", "pH", "alcohol", "quality"
+]
 
-        for faceLocation in faceLocations:
-            top, right, bottom, left = faceLocation
-            faceImageAligned = face_recognition.face_encodings(faceImage, [faceLocation], num_jitters=5)[0]
-            Id = int(os.path.split(imagePath)[-1].split(".")[1])
-            emotion_label = os.path.split(imagePath)[-1].split(".")[3]
+# Subset the DataFrame with the columns of interest
+subset_df = df[columns_of_interest]
 
-            faces.append(faceImageAligned)
-            ids.append(Id)
-            emotion_labels.append(emotion_label)
+# Split the data into features (X) and target variable (y)
+X = subset_df.drop("quality", axis=1)
+y = subset_df["quality"]
 
-    return ids, faces, emotion_labels
+# Initialize and fit the linear regression model
+model = LinearRegression()
+model.fit(X, y)
 
+# Get the absolute values of the coefficients
+abs_coefficients = abs(model.coef_)
 
-def getImageID(path):
-    imagePath = [os.path.join(path, f) for f in os.listdir(path)]
-    batch_size = 10  # Number of images to process in each batch
-    batches = [imagePath[i:i + batch_size] for i in range(0, len(imagePath), batch_size)]
+# Sort the coefficients in descending order
+sorted_indices = abs_coefficients.argsort()[::-1]
 
-    faces = []
-    ids = []
-    emotion_labels = []
+# Select the top 3 most important features
+top_3_indices = sorted_indices[:3]
+top_3_features = X.columns[top_3_indices]
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = executor.map(process_images, batches)
-        for result in results:
-            ids.extend(result[0])
-            faces.extend(result[1])
-            emotion_labels.extend(result[2])
-
-    return ids, faces, emotion_labels
-
-
-if __name__ == '__main__':
-    multiprocessing.freeze_support()
-
-    path = "data"
-    IDs, facedata, emotion_labels = getImageID(path)
-
-    # Save the trained model
-    np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
-    plt.close('all')
-    print("Successfully processed the data!")
+# Plot bar plots for the top 3 features with the target variable
+for feature in top_3_features:
+    plt.figure(figsize=(8, 6))
+    grouped_data = df.groupby(feature)["quality"].mean()
+    if len(grouped_data) > 10:
+        grouped_data = grouped_data.sample(n=10)  # Limit to 10 random samples if more than 10 unique values
+    grouped_data.plot(kind="bar")
+    plt.xlabel(feature)
+    plt.ylabel("Average Quality")
+    plt.title(f"Bar Plot: Average Quality by {feature}")
+    plt.show()
