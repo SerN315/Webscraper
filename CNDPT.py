@@ -269,7 +269,6 @@ print("Đã thu thập dữ liệu và gán nhãn cảm xúc thành công!")
 
 
 
-
 import face_recognition
 import numpy as np
 import os
@@ -289,7 +288,7 @@ def process_images(imagePaths):
         faceImage = Image.fromarray(faceImage)  # Convert to PIL Image for resizing
         faceImage = faceImage.resize((256, 256))  # Resize the image to a smaller size
         faceImage = np.array(faceImage)  # Convert back to numpy array
-        faceLocations = face_recognition.face_locations(faceImage, model='cnn')
+        faceLocations = face_recognition.face_locations(faceImage, model='small_dlib')
 
         for faceLocation in faceLocations:
             top, right, bottom, left = faceLocation
@@ -305,20 +304,22 @@ def process_images(imagePaths):
 
 
 def getImageID(path):
-    imagePath = [os.path.join(path, f) for f in os.listdir(path)]
+    imagePaths = [os.path.join(path, f) for f in os.listdir(path)]
     batch_size = 10  # Number of images to process in each batch
-    batches = [imagePath[i:i + batch_size] for i in range(0, len(imagePath), batch_size)]
+    batches = [imagePaths[i:i + batch_size] for i in range(0, len(imagePaths), batch_size)]
+    total_batches = len(batches)
 
     faces = []
     ids = []
     emotion_labels = []
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = executor.map(process_images, batches)
-        for result in results:
-            ids.extend(result[0])
-            faces.extend(result[1])
-            emotion_labels.extend(result[2])
+        for i, result in enumerate(executor.map(process_images, batches)):
+            batch_ids, batch_faces, batch_emotion_labels = result
+            faces.extend(batch_faces)
+            ids.extend(batch_ids)
+            emotion_labels.extend(batch_emotion_labels)
+            print(f"Batch {i+1}/{total_batches} processed.")
 
     return ids, faces, emotion_labels
 
@@ -333,6 +334,9 @@ if __name__ == '__main__':
     np.savez("Trainer.npz", facedata=facedata, IDs=IDs, emotion_labels=emotion_labels)
     plt.close('all')
     print("Successfully processed the data!")
+
+
+
 
 
 import cv2
@@ -374,7 +378,7 @@ while True:
         min_distance = min(face_distances)
         min_distance_index = np.argmin(face_distances)
 
-        if min_distance < 0.55:
+        if min_distance < 0.45:
             name = name_list[IDs[min_distance_index]]
         else:
             name = "Unknown"
@@ -412,3 +416,6 @@ while True:
 # Release the video capture and close all windows
 video.release()
 cv2.destroyAllWindows()
+
+
+#thay doi tuy bien no ron thay doi so lop va thuoc tinh de deep learning
