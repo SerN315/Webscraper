@@ -71,12 +71,3 @@ def get_event_recommendations(event_description):
 event_description = "A conference on artificial intelligence and machine learning"
 recommendations = get_event_recommendations(event_description)
 print(recommendations)
-
-
-import pandas as pd
-
-# Đọc dữ liệu từ file CSV vào DataFrame
-events_data = pd.read_csv('events.csv')
-
-# In ra nội dung của DataFrame
-print(events_data.head())
