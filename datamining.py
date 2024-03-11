@@ -49,6 +49,7 @@ def scrape():
                 date_element = driver.find_element(By.CSS_SELECTOR, ".date")
                 rating_value_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.dt_rating_vgs")
                 rating_count_element = driver.find_element(By.CSS_SELECTOR, ".starstruck-rating span.rating-count")
+                
                 genres_elements = driver.find_elements(By.CSS_SELECTOR, ".sgeneros a")
 
                 # Lấy nội dung của các phần tử khác

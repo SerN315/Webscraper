@@ -230,7 +230,7 @@ format_data_and_insert()
 import cv2
 import os
 
-data_dir = "data"
+data_dir = "./data"
 emotion_labels = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 
 
@@ -327,7 +327,7 @@ def getImageID(path):
 if __name__ == '__main__':
     multiprocessing.freeze_support()
 
-    path = "data"
+    path = "./data"
     IDs, facedata, emotion_labels = getImageID(path)
 
     # Save the trained model
