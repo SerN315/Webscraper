@@ -1,0 +1,2 @@
+path/to/glove.6B filter=lfs diff=lfs merge=lfs -text
+TTNT/glove.6B.100d.txt filter=lfs diff=lfs merge=lfs -text
