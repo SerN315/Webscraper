@@ -16,7 +16,7 @@ events_text = events_data['description'].values.astype('U')
 events_text_vectorized = vectorizer.fit_transform(events_text)
 
 # Huấn luyện mô hình LDA
-num_topics = 3 # Số lượng chủ đề
+num_topics = 10 # Số lượng chủ đề
 lda_model = LatentDirichletAllocation(n_components=num_topics, random_state=42)
 lda_model.fit(events_text_vectorized)
 
@@ -45,7 +45,7 @@ test_text = events_text_padded[~train_indices]
 test_target = target[~train_indices]
 
 # Huấn luyện mô hình RNN
-rnn_model.fit(train_text, train_target, validation_data=(test_text, test_target), epochs=10, batch_size=32)
+rnn_model.fit(train_text, train_target, validation_data=(test_text, test_target), epochs=30, batch_size=32)
 
 
 # Gợi ý sự kiện dựa trên mô hình đã huấn luyện
@@ -63,11 +63,12 @@ def get_event_recommendations(event_description):
     topic_indices = np.argsort(event_topic)[::-1][:3]
     topic_events = events_data[events_data['topic'].isin(topic_indices)]
     rnn_event_indices = np.argsort(event_topic_prediction)[::-1][:min(3,len(topic_events))]
+    rnn_event_indices = rnn_event_indices[rnn_event_indices < len(topic_events)]
     rnn_events = topic_events.iloc[rnn_event_indices]
 
     return rnn_events
 
 # Sử dụng mô hình để gợi ý sự kiện
-event_description = "A conference on artificial intelligence and machine learning"
+event_description = "CYBER SPACE IS THE BEST"
 recommendations = get_event_recommendations(event_description)
 print(recommendations)
