@@ -1,11 +1,159 @@
-id,eventname,time,description,topic
-1,Tech Innovators Summit,2023-01-10 09:00,"The **Tech Innovators Summit** is an annual gathering of visionaries, entrepreneurs, and industry leaders. Held at the state-of-the-art Convention Center, this event brings together experts from diverse fields—AI, blockchain, biotech, and more. Attendees can expect thought-provoking keynote speeches, interactive workshops, and networking opportunities. Whether you're a seasoned professional or a curious student, the summit promises valuable insights and connections.",5
-2,CodeCraft Workshop Series,2023-02-15 14:30,"**CodeCraft Workshop Series** invites developers, designers, and tech enthusiasts to dive deep into practical coding challenges. In this session, we'll explore advanced data structures and algorithms. Our expert instructors will guide you through real-world scenarios, helping you sharpen your problem-solving skills. Bring your laptops and curiosity—there's no better way to spend a Saturday afternoon!",3
-3,Machine Learning Unleashed Webinar,2023-03-20 18:00,"Join us for the **Machine Learning Unleashed Webinar**, where Dr. Emily Chen, a renowned data scientist, will demystify ML concepts. From regression to neural networks, she'll cover it all. Plus, get a sneak peek into cutting-edge research. Whether you're a beginner or a seasoned ML practitioner, this session promises actionable takeaways and a chance to connect with fellow enthusiasts.",7
-4,Financial Planning Masterclass,2023-04-05 11:15,"**Seminar D: Financial Planning for Startups** is a must-attend for budding entrepreneurs. Led by financial guru Mark Johnson, this masterclass delves into budgeting, fundraising, and risk management. Learn how to navigate the financial maze, optimize cash flow, and secure funding. Bring your questions—Mark's expertise will leave you inspired and well-prepared.",2
-5,CodeJam: 24-Hour Hackathon,2023-05-12 10:00,"**CodeJam: 24-Hour Hackathon** is where creativity meets caffeine-fueled coding. Teams of developers, designers, and dreamers will tackle real-world challenges. From building chatbots to optimizing supply chains, the possibilities are endless. Prizes await the most innovative solutions. Don't forget your sleeping bag—this adrenaline-packed event won't stop until the sun rises!",9
-6,Inclusion Matters Panel Discussion,2023-06-18 16:45,"**Inclusion Matters Panel Discussion (Panel F)** brings together trailblazers in diversity and inclusion. Join our esteemed panelists—activists, CEOs, and artists—as they discuss breaking barriers. From gender equality to neurodiversity, we'll explore how organizations can foster a more inclusive culture. Audience participation is encouraged—let's create change together!",4
-7,ConnectX: Networking Extravaganza,2023-07-22 19:30,"**ConnectX: Networking Extravaganza** is not your average mixer. Picture this: fairy lights, jazz music, and a rooftop garden. Rub shoulders with industry titans, startup founders, and fellow professionals. Exchange business cards, swap stories, and maybe even hatch a collaboration. Dress to impress—your next big opportunity might be just a handshake away!",8
-8,QuantumLeap Software Launch,2023-08-08 13:00,"Get ready for the unveiling of **QuantumLeap**, the game-changing software suite. Our CEO, Dr. Sophia Rodriguez, will showcase its features: quantum encryption, hyperdimensional data visualization, and AI-driven anomaly detection. Witness the future of cybersecurity and data analytics. Bonus: exclusive early access for attendees. Mark your calendars!",1
-9,Career Pathways Fair,2023-09-25 10:30,"**Career Pathways Fair (Event I)** is where dreams meet reality. Graduating soon? Explore job opportunities across industries—tech, healthcare, finance, and more. Chat with recruiters, attend mock interviews, and fine-tune your elevator pitch. Pro tip: wear your lucky socks. Who knows? Your next career move might be waiting at Booth #7!",6
-10,Startup Showdown: Demo Day,2023-10-30 15:20,"**Startup Showdown: Demo Day (Event J)** is the grand finale of our accelerator program. Founders from 10 startups will pitch their disruptive ideas to a panel of investors. From AI-driven pet care to sustainable fashion, expect surprises. Who will win the coveted golden pineapple trophy? Join us and witness innovation in action!",10
+id,eventname,time,description,topic,topic_des
+1,Conference on Artificial Intelligence,10/15/2022 9:00,Join us for a conference on artificial intelligence and its applications.,1,Artificial Intelligence
+2,Workshop on Data Science,11/5/2022 14:30,Learn the latest data science techniques and tools in this hands-on workshop.,2,Data Science
+3,Panel Discussion on Cybersecurity,12/1/2022 18:00,Experts will discuss the current challenges and trends in cybersecurity.,3,Cybersecurity
+4,Webinar on Machine Learning,11/20/2022 11:00,Discover the fundamentals of machine learning and its real-world applications.,1,Artificial Intelligence
+5,Conference on Data Analytics,12/10/2022 10:30,Explore the latest trends and innovations in the field of data analytics.,2,Data Science
+6,Workshop on Ethical Hacking,1/15/2023 15:00,Learn about the tools and techniques used in ethical hacking and cybersecurity.,3,Cybersecurity
+7,Seminar on Natural Language Processing,2/5/2023 13:30,Join us to explore the advancements in natural language processing and text analysis.,1,Artificial Intelligence
+8,Panel Discussion on Blockchain Technology,3/1/2023 17:30,Experts will discuss the potential applications and challenges of blockchain technology.,3,Cybersecurity
+9,Workshop on Big Data Processing,4/10/2023 9:30,Learn how to process and analyze large datasets using big data technologies.,2,Data Science
+10,Conference on Computer Vision,5/20/2023 10:00,Discover the latest developments in computer vision and image recognition.,1,Artificial Intelligence
+11,Workshop on UI/UX Design,6/15/2023 14:00,Learn the principles and best practices of user interface and user experience design.,4,UI/UX Design
+12,Conference on Internet of Things (IoT),7/5/2023 9:30,Explore the applications and challenges of the Internet of Things (IoT) in various industries.,5,Internet of Things (IoT)
+13,Panel Discussion on Cloud Computing,8/1/2023 16:00,Experts will discuss the latest trends and advancements in cloud computing.,6,Cloud Computing
+14,Workshop on Mobile App Development,9/10/2023 11:00,Learn how to develop mobile applications for iOS and Android platforms.,4,UI/UX Design
+15,Conference on E-commerce,10/25/2023 10:30,Explore the latest strategies and technologies in the field of e-commerce.,5,Internet of Things (IoT)
+16,Seminar on Digital Marketing,11/15/2023 13:30,Discover effective digital marketing strategies for promoting your products or services.,7,Digital Marketing
+17,Workshop on Project Management,12/10/2023 15:00,Learn the essential skills and techniques for successful project management.,8,Project Management
+18,Conference on Renewable Energy,1/20/2024 9:30,Explore the advancements and future prospects of renewable energy sources.,9,Renewable Energy
+19,Panel Discussion on Sustainable Development,2/5/2024 14:00,Experts will discuss the importance of sustainable development and its impact on the environment.,10,Sustainable Development
+20,Workshop on 3D Printing,3/15/2024 11:30,Learn how to design and print 3D objects using the latest 3D printing technologies.,11,3D Printing
+21,Conference on Robotics,4/10/2024 10:00,Discover the latest advancements in robotics and their applications in various industries.,12,Robotics
+22,Seminar on Quantum Computing,5/5/2024 13:30,Explore the principles and potential applications of quantum computing.,6,Cloud Computing
+23,Workshop on Augmented Reality,6/20/2024 15:00,Learn how to develop augmented reality applications using popular AR frameworks.,13,Augmented Reality
+24,Conference on Financial Technology (FinTech),7/15/2024 9:30,Explore the latest innovations and trends in the field of financial technology.,14,FinTech
+25,Panel Discussion on Artificial Neural Networks,8/1/2024 16:00,Experts will discuss the theory and applications of artificial neural networks.,1,Artificial Intelligence
+26,Workshop on Graphic Design,9/10/2024 11:00,Learn the principles and techniques of graphic design for digital and print media.,4,UI/UX Design
+27,Conference on Virtual Reality,10/25/2024 10:30,Explore the latest developments in virtual reality technology and its applications.,13,Augmented Reality
+28,Seminar on Cryptocurrency,11/15/2024 13:30,Learn about the fundamentals of cryptocurrency and blockchain technology.,14,FinTech
+29,Workshop on Web Development,12/10/2024 15:00,Learn the essential skills and tools for building modern and responsive websites.,4,UI/UX Design
+30,Conference on Renewable Energy Sources,1/20/2025 9:30,Explore the advancements and future prospects of renewable energy sources.,9,Renewable Energy
+31,Concert: Classical Music Performance,2/5/2025 19:00,Experience an enchanting evening of classical music performed by renowned musicians.,42,Music Entertainment
+32,Workshop on Songwriting,3/15/2025 14:30,Learn the art of crafting compelling songs and expressing your musical creativity.,42,Music Entertainment
+33,Conference on Music Production,4/10/2025 10:00,Explore the latest techniques and tools in music production for professional and aspiring musicians.,42,Music Entertainment
+34,Panel Discussion on Film Production,5/20/2025 16:00,Experts will discuss the process and challenges of film production in the modern digital era.,22,Film Production
+35,Workshop on Acting Techniques,6/15/2025 13:00,Discover the fundamentals of acting and develop your skills through practical exercises.,22,Film Production
+36,Conference on Photography,7/5/2025 9:30,Explore the art and science of photography and learn from industry-leading photographers.,23,Photography
+37,Seminar on Fashion Design,8/15/2025 11:00,Discover the latest trends and techniques in fashion design and garment construction.,24,Fashion Design
+38,Workshop on Culinary Arts,9/10/2025 14:30,Learn the art of cooking and explore various culinary techniques and cuisines.,25,Culinary Arts
+39,Conference on Travel Writing,10/25/2025 9:00,Discover the art of travel writing and learn how to craft captivating travel narratives.,26,Writing
+40,Panel Discussion on Journalism Ethics,11/20/2025 16:00,Experts will discuss the ethical challenges and responsibilities of journalism in the digital age.,27,Journalism
+41,Workshop on Public Speaking,12/15/2025 13:00,Develop effective public speaking skills and boost your confidence in front of an audience.,28,Public Speaking
+42,Conference on Early Childhood Education,1/10/2026 10:30,Explore the latest research and best practices in early childhood education and development.,29,Education
+43,Seminar on Special Education,2/5/2026 14:00,Learn about effective strategies and interventions for students with special needs.,29,Education
+44,Workshop on STEM Education,3/15/2026 11:30,"Discover innovative approaches to teaching science, technology, engineering, and mathematics.",29,Education
+45,Conference on Language Learning,4/20/2026 9:00,Explore the latest methodologies and technologies for language learning and teaching.,29,Education
+46,Panel Discussion on Education Policy,5/10/2026 16:30,Experts will discuss the current challenges and trends in education policy and reform.,29,Education
+47,Workshop on Fine Arts,6/15/2026 13:00,"Explore different mediums and techniques in painting, sculpture, and other fine arts.",14,Fine Arts
+48,Conference on Digital Marketing in the Entertainment Industry,7/5/2026 10:30,Discover effective digital marketing strategies specifically tailored for the entertainment industry.,7,Digital Marketing
+49,Seminar on Event Planning and Management,8/15/2026 14:00,Learn the key principles and practical skills for planning and managing successful events.,30,Event Planning
+50,Workshop on Web Development,9/20/2026 15:30,"Learn the fundamentals of web development including HTML, CSS, and JavaScript.",31,Technology
+51,Conference on Sustainable Agriculture,10/10/2026 11:00,Explore innovative and sustainable practices in agriculture and food production.,32,Agriculture
+52,Panel Discussion on Climate Change,11/15/2026 13:30,Experts will discuss the impact of climate change and potential solutions for a sustainable future.,33,Environment
+53,Workshop on Data Science,12/5/2026 9:30,Learn the essential concepts and techniques of data science and analysis.,31,Technology
+54,Seminar on Financial Planning,1/15/2027 14:30,Gain insights into effective financial planning strategies for personal and professional success.,34,Finance
+55,Conference on Artificial Intelligence,2/20/2027 10:00,Explore the latest advancements and applications of artificial intelligence in various industries.,31,Technology
+56,Panel Discussion on Mental Health,3/10/2027 16:00,Experts will discuss the importance of mental health and strategies for maintaining well-being.,35,Health
+57,Workshop on Photography,4/15/2027 12:30,Learn the art of photography and explore various techniques to capture stunning images.,14,Fine Arts
+58,Conference on Entrepreneurship,5/5/2027 9:30,Discover the key principles and practices of successful entrepreneurship.,36,Business
+59,Seminar on Leadership Development,6/15/2027 14:30,Enhance your leadership skills and learn effective strategies for leading teams.,36,Business
+60,Workshop on Mobile App Development,7/20/2027 15:00,Learn to develop mobile applications for iOS and Android platforms using popular frameworks.,31,Technology
+61,Conference on Renewable Energy,8/10/2027 11:30,Explore the latest trends and advancements in renewable energy sources and technologies.,33,Environment
+62,Panel Discussion on Diversity and Inclusion,9/15/2027 13:30,Experts will discuss the importance of diversity and inclusion in workplaces and society.,37,Social Issues
+63,Workshop on Culinary Arts,10/5/2027 10:00,Learn culinary skills and techniques from professional chefs and explore different cuisines.,25,Culinary Arts
+64,Seminar on Project Management,11/15/2027 14:30,Gain insights into effective project management practices and tools.,36,Business
+65,Conference on Space Exploration,12/5/2027 9:30,Explore the latest developments and future prospects in space exploration and astronomy.,38,Science
+66,Panel Discussion on Human Rights,1/15/2028 14:00,Experts will discuss the importance of protecting human rights and address current challenges.,37,Social Issues
+67,Workshop on Graphic Design,2/20/2028 10:30,Learn the fundamentals of graphic design and explore various design software and tools.,39,Design
+68,Conference on Healthcare Innovation,3/10/2028 16:00,Explore innovative technologies and approaches in healthcare for improved patient outcomes.,40,Healthcare
+69,Seminar on Personal Development,4/15/2028 12:30,Discover strategies for personal growth and development for a fulfilling life.,41,Personal Development
+70,Workshop on Machine Learning,5/5/2028 9:30,Learn the fundamental concepts and techniques of machine learning and data analysis.,31,Technology
+71,Conference on Social Media Marketing,6/15/2028 14:30,Discover effective strategies for marketing and promoting businesses on social media platforms.,44,Marketing
+72,Panel Discussion on Women Empowerment,7/20/2028 15:00,Experts will discuss the importance of empowering women and strategies for gender equality.,37,Social Issues
+73,Workshop on Creative Writing,8/10/2028 11:30,Explore the art of creative writing and learn techniques to enhance your writing skills.,26,Writing
+74,Seminar on Financial Investments,9/15/2028 13:30,Gain insights into various investment options and strategies for financial growth.,34,Finance
+75,Conference on Artificial Neural Networks,10/5/2028 10:00,Explore the principles and applications of artificial neural networks in machine learning.,31,Technology
+76,Panel Discussion on Mental Wellness,11/15/2028 14:30,Experts will discuss the importance of mental wellness and strategies for self-care.,35,Health
+77,Workshop on Pottery,12/5/2028 9:30,Learn the art of pottery and create your own ceramic masterpieces.,14,Fine Arts
+78,Conference on Innovation and Entrepreneurship,1/15/2029 14:00,Explore innovative ideas and strategies for successful entrepreneurship.,36,Business
+79,Seminar on Effective Communication,2/20/2029 10:30,Learn techniques for effective communication in personal and professional settings.,41,Personal Development
+80,Workshop on Game Development,3/10/2029 16:00,Learn the basics of game development and create your own interactive games.,31,Technology
+81,Conference on Sustainable Architecture,4/15/2029 12:30,Explore sustainable and eco-friendly practices in architecture and urban planning.,32,Architecture
+82,Panel Discussion on LGBTQ+ Rights,5/5/2029 9:30,Experts will discuss the importance of LGBTQ+ rights and address current challenges.,37,Social Issues
+83,Workshop on Fashion Design,6/15/2029 14:30,Learn the art of fashion design and explore different techniques in garment creation.,46,Fashion
+84,Seminar on Leadership and Team Building,7/20/2029 15:00,Enhance your leadership skills and learn strategies for effective team building.,36,Business
+85,Conference on Quantum Computing,8/10/2029 11:30,Explore the principles and potential applications of quantum computing.,31,Technology
+86,Panel Discussion on Climate Action,9/15/2029 13:30,Experts will discuss the urgent need for climate action and strategies for sustainability.,33,Environment
+87,Workshop on User Experience Design,10/5/2029 10:00,Learn the principles of user experience design and create intuitive and user-friendly interfaces.,39,Design
+88,Conference on Medical Research,11/15/2029 14:30,Explore the latest advancements and breakthroughs in medical research and healthcare.,40,Healthcare
+89,Seminar on Personal Finance,12/5/2029 9:30,Gain insights into personal finance management and strategies for financial success.,34,Finance
+90,Workshop on Digital Photography,1/15/2030 14:00,Learn advanced techniques in digital photography and editing for professional-quality images.,23,Photography
+91,Panel Discussion on Internet of Things (IoT),9/15/2030 13:30,Experts will discuss the impact and potential of Internet of Things (IoT) technologies.,5,Internet of Things (IoT)
+92,Workshop on Cloud Computing,10/5/2030 10:00,Learn about the fundamentals of cloud computing and how to leverage cloud services.,6,Cloud Computing
+93,Conference on Digital Marketing,11/15/2030 14:30,Explore the latest trends and strategies in digital marketing for business growth.,7,Digital Marketing
+94,Seminar on Project Management,12/5/2030 9:30,Gain insights into effective project management techniques and best practices.,8,Project Management
+95,Workshop on Renewable Energy,1/15/2031 14:00,Learn about renewable energy sources and their role in creating a sustainable future.,9,Renewable Energy
+96,Conference on Sustainable Development,2/15/2031 9:00,Explore the principles and practices of sustainable development for a better world.,10,Sustainable Development
+97,Workshop on 3D Printing,3/15/2031 11:00,Learn the basics of 3D printing technology and create your own 3D printed objects.,11,3D Printing
+98,Conference on Robotics,4/5/2031 13:30,Explore the latest advancements in robotics and their applications in various industries.,12,Robotics
+99,Seminar on Augmented Reality,5/15/2031 10:00,Gain insights into the world of augmented reality and its potential for transforming industries.,13,Augmented Reality
+100,Workshop on Fine Arts,6/5/2031 14:30,Explore various techniques and mediums in fine arts and unleash your creativity.,14,Fine Arts
+101,Panel Discussion on Film Production,9/15/2031 13:30,Experts will discuss the art and craft of film production and storytelling.,22,Film Production
+102,Workshop on Photography,10/5/2031 10:00,Learn the art of photography from composition and lighting to post-processing techniques.,23,Photography
+103,Conference on Fashion Design,11/15/2031 14:30,Explore the latest trends and innovations in fashion design and garment production.,24,Fashion Design
+104,Seminar on Culinary Arts,12/5/2031 9:30,Gain insights into the world of culinary arts and learn techniques from professional chefs.,25,Culinary Arts
+105,Workshop on Writing,1/15/2032 14:00,Learn the essentials of creative writing and develop your storytelling skills.,26,Writing
+106,Conference on Journalism,2/15/2032 9:00,Explore the evolving landscape of journalism and the role of media in society.,27,Journalism
+107,Seminar on Public Speaking,3/15/2032 11:00,Learn effective public speaking techniques and overcome stage fright.,28,Public Speaking
+108,Workshop on Education,4/5/2032 13:30,Discover innovative teaching methods and strategies for effective classroom instruction.,29,Education
+109,Conference on Event Planning,5/15/2032 10:00,Explore the art and science of event planning and management.,30,Event Planning
+110,Seminar on Technology,6/5/2032 14:30,Gain insights into the latest technological advancements and their impact on society.,31,Technology
+111,Panel Discussion on Agriculture,9/15/2032 13:30,Experts will discuss sustainable agriculture practices and the future of food production.,32,Agriculture
+112,Workshop on Architecture,10/5/2032 10:00,Learn the principles of architectural design and create innovative structures.,33,Architecture
+113,Conference on Environment,11/15/2032 14:30,Explore pressing environmental issues and strategies for conservation and sustainability.,34,Environment
+114,Seminar on Finance,12/5/2032 9:30,Gain insights into personal finance management and investment strategies.,35,Finance
+115,Workshop on Health,1/15/2033 14:00,Learn about maintaining good health and wellness through nutrition and exercise.,36,Health
+116,Conference on Business,2/15/2033 9:00,Explore the world of business and entrepreneurship and learn from successful business leaders.,37,Business
+117,Seminar on Social Issues,3/15/2033 11:00,Gain insights into pressing social issues and explore ways to create positive change.,38,Social Issues
+118,Workshop on Science,4/5/2033 13:30,Explore the wonders of science through hands-on experiments and demonstrations.,39,Science
+119,Conference on Design,5/15/2033 10:00,Explore the latest trends and innovations in design across various disciplines.,40,Design
+120,Seminar on Healthcare,6/5/2033 14:30,Gain insights into the healthcare industry and the latest advancements in medical technology.,41,Healthcare
+121,Workshop on Personal Development,7/15/2033 13:30,Learn techniques for personal growth and development to unlock your full potential.,43,Personal Development
+122,Conference on Music Entertainment,8/5/2033 10:00,Explore the world of music entertainment and the business behind the music industry.,45,Music Entertainment
+123,Seminar on Marketing,9/15/2033 14:30,Gain insights into effective marketing strategies and tactics for business success.,44,Marketing
+124,Workshop on Fashion,10/5/2033 9:30,Learn about fashion trends styling techniques and the business of the fashion industry.,46,Fashion
+125,Panel Discussion on Internet of Things (IoT),11/15/2033 13:30,Experts will discuss the future possibilities and challenges of Internet of Things (IoT) technologies.,5,Internet of Things (IoT)
+126,Workshop on Cloud Computing,12/5/2033 10:00,Learn advanced concepts and practical applications of cloud computing in various industries.,6,Cloud Computing
+127,Conference on Digital Marketing,1/15/2034 14:30,Explore innovative digital marketing strategies and tactics for effective customer engagement.,7,Digital Marketing
+128,Seminar on Project Management,2/5/2034 9:30,Gain insights into project management methodologies and tools for successful project execution.,8,Project Management
+129,Workshop on Renewable Energy,3/15/2034 14:00,Learn about the latest advancements in renewable energy technologies and their impact on sustainability.,9,Renewable Energy
+130,Conference on Sustainable Development,4/15/2034 9:00,Explore case studies and best practices in sustainable development for a greener future.,10,Sustainable Development
+131,Workshop on 3D Printing,5/15/2034 11:00,Learn advanced techniques in 3D printing and explore its applications in various industries.,11,3D Printing
+132,Conference on Robotics,6/5/2034 13:30,Discover cutting-edge robotics research and applications in healthcare manufacturing and more.,12,Robotics
+133,Seminar on Augmented Reality,7/15/2034 10:00,Explore the potential of augmented reality in fields such as gaming education and industrial training.,13,Augmented Reality
+134,Workshop on Fine Arts,8/5/2034 14:30,Explore different artistic mediums and techniques in fine arts and express your creativity.,14,Fine Arts
+135,Panel Discussion on Film Production,11/15/2034 13:30,Experts will discuss the future of film production including emerging technologies and storytelling techniques.,22,Film Production
+136,Workshop on Photography,12/5/2034 10:00,Learn advanced photography techniques including lighting composition and post-processing.,23,Photography
+137,Conference on Fashion Design,1/15/2035 14:30,Explore the latest fashion trends and innovations and gain insights into the business side of the fashion industry.,24,Fashion Design
+138,Seminar on Culinary Arts,2/5/2035 9:30,Gain hands-on experience in culinary arts from basic cooking skills to advanced gastronomy.,25,Culinary Arts
+139,Workshop on Writing,3/15/2035 14:00,Develop your writing skills across different genres including fiction non-fiction and poetry.,26,Writing
+140,Conference on Journalism,4/15/2035 9:00,Explore the evolving landscape of journalism and the role of media in shaping public opinion.,27,Journalism
+141,Seminar on Public Speaking,5/15/2035 11:00,Learn effective public speaking techniques to communicate confidently and persuasively.,28,Public Speaking
+142,Workshop on Education,6/5/2035 13:30,Discover innovative teaching methodologies and strategies for student engagement and learning outcomes.,29,Education
+143,Conference on Event Planning,7/15/2035 10:00,Learn the key principles and skills required for successful event planning and execution.,30,Event Planning
+144,Seminar on Technology,8/5/2035 14:30,Explore the latest technological advancements and their impact on various industries and society.,31,Technology
+145,Panel Discussion on Agriculture,11/15/2035 13:30,Experts will discuss sustainable farming practices precision agriculture and the future of food production.,32,Agriculture
+146,Workshop on Architecture,12/5/2035 10:00,Learn architectural design principles and techniques and explore sustainable and innovative building designs.,33,Architecture
+147,Conference on Environment,1/15/2036 14:30,Explore environmental conservation efforts climate change mitigation and sustainable development practices.,34,Environment
+148,Seminar on Finance,2/5/2036 9:30,Gain insights into personal finance management investment strategies and financial planning.,35,Finance
+149,Workshop on Health,3/15/2036 14:00,Learn about maintaining a healthy lifestyle disease prevention and holistic approaches to wellness.,36,Health
+150,Conference on Business,4/15/2036 9:00,Explore the world of business from entrepreneurship and startups to corporate strategies and leadership.,37,Business
+151,Seminar on Social Issues,5/15/2036 11:00,Explore pressing social issues such as inequality human rights and social justice and discuss potential solutions.,38,Social Issues
+152,Workshop on Science,6/5/2036 13:30,Engage in hands-on scientific experiments and explore various scientific disciplines and their applications.,39,Science
+153,Conference on Design,7/15/2036 10:00,Explore design thinking user experience and the role of design in shaping products services and environments.,40,Design
+154,Seminar on Healthcare,8/5/2036 14:30,Gain insights into the healthcare industry healthcare delivery systems and emerging medical technologies.,41,Healthcare
+155,Workshop on Personal Development,9/15/2036 13:30,Discover techniques for personal growth self-improvement and achieving success in various aspects of life.,43,Personal Development
+156,Conference on Music Entertainment,10/5/2036 10:00,Explore the music entertainment industry including music production artist management and marketing strategies.,45,Music Entertainment
+157,Seminar on Marketing,11/15/2036 14:30,Learn about effective marketing strategies consumer behavior digital marketing and brand management.,44,Marketing
+158,Workshop on Fashion,12/5/2036 9:30,Learn fashion design techniques fashion styling and the business of the fashion industry.,46,Fashion

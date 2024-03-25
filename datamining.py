@@ -241,83 +241,157 @@ if __name__ == "__main__":
 
 
 
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import LatentDirichletAllocation
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from keras.layers import Embedding, LSTM, Dense
+from keras.models import Sequential
+import numpy as np
+import fasttext.util
+from langdetect import detect
 
-# # Đọc dữ liệu từ file CSV và chuyển cột dateCreated sang định dạng datetime
-# data = pd.read_csv('output.csv')
-# data['dateCreated'] = pd.to_datetime(data['dateCreated'], errors='coerce')
-# data['ratingValue'] = pd.to_numeric(data['ratingValue'], errors='coerce')
-# data['ratingCount'] = pd.to_numeric(data['ratingCount'], errors='coerce')
 
-# # Lựa chọn các cột quan trọng
-# selected_data = data[['dateCreated', 'ratingCount']]
+# Tải dữ liệu từ tệp CSV
+def load_data(file_path):
+    return pd.read_csv(file_path)
 
-# # Loại bỏ các dòng có giá trị NaN
-# selected_data = selected_data.dropna()
+# Dọn dẹp các cột số bằng cách chuyển chúng thành kiểu số
+def clean_numeric_columns(df, columns):
+    for col in columns:
+        df[col] = pd.to_numeric(df[col].str.replace(',', ''), errors='coerce')
+    return df
 
-# # Chia dữ liệu thành train và test
-# train_data = selected_data.iloc[:-300]  # Sử dụng 10 dòng cuối cùng làm test
+# Điền giá trị thiếu trong cột 'info' và 'genres' bằng chuỗi trống
+def fill_missing_values(df):
+    df['info'] = df['info'].fillna('')
+    df['genres'] = df['genres'].fillna('')
+    return df
 
-# # Xây dựng mô hình ARIMA
-# model = ARIMA(train_data['ratingCount'], order=(5,1,0))  # Chọn order phù hợp
-# model_fit = model.fit()
+# Kết hợp các đặc trưng khác nhau thành một đặc trưng duy nhất
+def combine_features(df):
+    df['combined_features'] = df['title'] + ' ' + df['info'] + ' ' + df['ratingValue'].astype(str) + ' ' + df['ratingCount'].astype(str) + ' ' + df['genres']
+    return df
 
-# # Dự đoán
-# forecast = model_fit.forecast(steps=10)  # Dự đoán cho 10 bước tiếp theo
+# Tiền xử lý dữ liệu (dọn dẹp, xử lý giá trị thiếu, kết hợp đặc trưng)
+def preprocess_data(data):
+    data = clean_numeric_columns(data, ['ratingValue', 'ratingCount'])
+    data = fill_missing_values(data)
+    data = combine_features(data)
+    return data
 
-# # Tạo chuỗi thời gian mới cho dự đoán
-# last_date = train_data['dateCreated'].iloc[-1]
-# forecast_dates = pd.date_range(start=last_date, periods=11, freq='M')[1:]
+# Vector hóa đặc trưng văn bản sử dụng TF-IDF
+def vectorize_text_features(features):
+    tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf_vectorizer.fit_transform(features)
+    return tfidf_matrix
 
-# # Đánh giá mô hình
-# model_fit.plot_diagnostics(figsize=(15, 12))
-# plt.show()
+# Chuẩn hóa các đặc trưng số bằng MinMaxScaler
+def normalize_numerical_features(data):
+    scaler = MinMaxScaler()
+    numerical_features = data[['ratingValue', 'ratingCount']].astype(float)
+    data[['ratingValue', 'ratingCount']] = scaler.fit_transform(numerical_features)
+    return data
 
-# # So sánh dự đoán với dữ liệu thực tế
-# test_data = selected_data.iloc[-300:]
-# plt.figure(figsize=(12, 6))
-# plt.plot(test_data['dateCreated'], test_data['ratingCount'], label='Actual', color='blue')
-# plt.plot(forecast_dates, forecast, label='Forecast', color='green')
-# plt.xlabel('Ngày tạo')
-# plt.ylabel('Rating Count')
-# plt.title('So sánh dự đoán với dữ liệu thực tế')
-# plt.legend()
-# plt.show()
+# Train RNN model
+def train_rnn_model(data):
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(data['combined_features'])
+    sequences = tokenizer.texts_to_sequences(data['combined_features'])
+    padded_sequences = pad_sequences(sequences, maxlen=max_len)  # Define max_len
+    model = Sequential()
+    model.add(Embedding(input_dim=num_words, output_dim=embedding_dim, input_length=max_len))
+    model.add(LSTM(units=64))
+    model.add(Dense(units=1, activation='sigmoid'))  # Adjust units and activation as needed
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])  # Adjust loss and metrics
+    model.fit(padded_sequences, data['ratingValue'], epochs=10, batch_size=32)  # Adjust epochs and batch_size
+    return model
 
-# # Tối ưu hóa mô hình
-# best_aic = float("inf")
-# best_order = None
+# Train LDA model
+def train_lda_model(data,tfidf_matrix):
+    # Preprocess text for LDA (tokenization, removing stopwords, stemming, etc.)
+    # Then train LDA model
+    lda = LatentDirichletAllocation(n_components=n_topics, random_state=42)
+    lda.fit(tfidf_matrix)
+    return lda
 
-# for p in range(3):
-#     for d in range(3):
-#         for q in range(3):
-#             try:
-#                 model = ARIMA(train_data['ratingCount'], order=(p,d,q))
-#                 model_fit = model.fit()
-#                 if model_fit.aic < best_aic:
-#                     best_aic = model_fit.aic
-#                     best_order = (p, d, q)
-#             except:
-#                 continue
+# Combine RNN and LDA representations
+def combine_representations(rnn_model, lda_model, tfidf_matrix,padded_sequences):
+    rnn_representations = rnn_model.predict(padded_sequences)  # Assuming padded_sequences are defined
+    lda_representations = lda_model.transform(tfidf_matrix)
+    combined_representations = np.concatenate((rnn_representations, lda_representations), axis=1)
+    return combined_representations
 
-# print(f"Best AIC: {best_aic}, Best Order: {best_order}")
+# Calculate similarity between movies
+def calculate_similarity(tfidf_matrix):
+    return cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# # Xây dựng lại mô hình với tham số tốt nhất
-# best_model = ARIMA(train_data['ratingCount'], order=best_order)
-# best_model_fit = best_model.fit()
+# Calculate similarity between user input and movies
+def calculate_similarity_with_user_input(user_embedding, movie_embeddings):
+    return cosine_similarity(user_embedding, movie_embeddings)
 
-# # Dự đoán với mô hình tối ưu hóa
-# best_forecast = best_model_fit.forecast(steps=10)
+# Get top similar movies
+def get_top_similar_movies(data, similarity_matrix, n=10):
+    top_indices = np.argsort(similarity_matrix)[-n-1:-1][::-1]  # Exclude self-similarity
+    return data.iloc[top_indices]
 
-# # Biểu đồ dự đoán mới
-# plt.figure(figsize=(12, 6))
-# plt.plot(selected_data['dateCreated'], selected_data['ratingCount'], label='Actual', color='blue')
-# plt.plot(train_data['dateCreated'], best_model_fit.fittedvalues, label='Fitted', color='red')
-# plt.plot(forecast_dates, best_forecast, label='Forecast', color='green')
-# plt.xlabel('Ngày tạo')
-# plt.ylabel('Rating Count')
-# plt.title('Dự đoán chuỗi thời gian cho Rating Count (Mô hình tối ưu hóa)')
-# plt.legend()
-# plt.show()
+# Main function
+def main():
+    # Load data
+    file_path = 'output.csv'
+    data = load_data(file_path)
+    
+    # Preprocess data
+    data = preprocess_data(data)
+    
+    # Vectorize text features
+    tfidf_matrix = vectorize_text_features(data['combined_features'])
+    
+    # Normalize numerical features
+    data = normalize_numerical_features(data)
+    
+    # Train RNN model
+    rnn_model = train_rnn_model(data)
+    
+    # Train LDA model
+    lda_model = train_lda_model(data)
+    
+    # Combine representations
+    combined_representations = combine_representations(rnn_model, lda_model, tfidf_matrix)
+    
+    # Calculate similarity
+    cosine_sim = calculate_similarity(combined_representations)
+    
+    # Get user input (description can be in English or Vietnamese)
+    user_description = input("Enter a movie description: ")
+    
+    # Identify language of user input
+    lang = identify_language(user_description)
+    
+    # Preprocess user input
+    preprocessed_user_input = preprocess_text(user_description, lang)
+    
+    # Generate embeddings for user input
+    user_embedding = rnn_model.predict(pad_sequences(tokenizer.texts_to_sequences([preprocessed_user_input]), maxlen=max_len))
+    
+    # Calculate similarity between user input and movies
+    user_movie_similarity = calculate_similarity_with_user_input(user_embedding, combined_representations)
+    
+    # Get top similar movies
+    top_similar_movies = get_top_similar_movies(data, user_movie_similarity)
+    
+    print("Top similar movies:")
+    print(top_similar_movies)
+
+# Parameters
+num_words = 10000  # Number of words in tokenizer
+embedding_dim = 100  # Embedding dimension
+max_len = 100  # Maximum sequence length for padding
+n_topics = 10  # Number of topics for LDA
+
+# Call main function
+if __name__ == "__main__":
+    main()
